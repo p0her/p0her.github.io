@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang=en>
+<html lang=ko>
 <head>
     <!-- so meta -->
     <meta charset="utf-8">
@@ -12,26 +12,27 @@
 <meta property="og:url" content="http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/index.html">
 <meta property="og:site_name" content="p0her">
 <meta property="og:description" content="비록 대회할 때 풀지는 못 한 문제지만, 대회가 끝난 후 write-up을 보며 풀었는데 꽤나 재밌었던 문제라 정리를 하려고 한다. Analysis문제에서 주어진 코드는 다음과 같다.  123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525">
-<meta property="og:locale" content="en_US">
+<meta property="og:locale" content="ko_KR">
 <meta property="article:published_time" content="2023-05-01T12:10:52.000Z">
-<meta property="article:modified_time" content="2023-05-01T12:11:45.324Z">
+<meta property="article:modified_time" content="2023-05-01T12:33:02.697Z">
 <meta property="article:author" content="p0her">
+<meta property="article:tag" content="pwn">
 <meta name="twitter:card" content="summary">
     
     
       
         
-          <link rel="shortcut icon" href="/images/favicon.ico">
+          <link rel="shortcut icon" href="/images/mikoto.jpg">
         
       
       
         
-          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          <link rel="icon" type="image/png" href="/images/mikoto.jpg" sizes="192x192">
         
       
       
         
-          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/mikoto.jpg">
         
       
     
@@ -39,6 +40,14 @@
     <title>Ricerca CTF 2023 nemu</title>
     <!-- async scripts -->
     <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-86660611-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-86660611-1');
+  </script>
 
 
     <!-- Umami Analytics -->
@@ -54,6 +63,16 @@
     
     
 	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
 	
 <meta name="generator" content="Hexo 6.3.0"></head>
 
@@ -73,7 +92,9 @@
      --><!--
        --><li><a href="/archives/">Writing</a></li><!--
      --><!--
-       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
      -->
       </ul>
     </span>
@@ -139,8 +160,18 @@
 
 
       
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/CTF/">CTF</a>
+    </div>
+
 
       
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/pwn/" rel="tag">pwn</a>
+    </div>
+
 
     </div>
   </header>
@@ -200,7 +231,9 @@
         
           <li><a href="/archives/">Writing</a></li>
         
-          <li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li>
+          <li><a href="/categories/">Category</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
         
       </ul>
     </div>
@@ -255,7 +288,9 @@
      --><!--
        --><li><a href="/archives/">Writing</a></li><!--
      --><!--
-       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
      -->
       </ul>
     </nav>
