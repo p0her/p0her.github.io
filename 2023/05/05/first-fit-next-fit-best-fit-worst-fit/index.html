@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang=ko>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="first-fit, next-fit, best-fit, worst-fit 알고리즘은 운영체제 이론에서 프로세스가 메모리를 블럭단위로 가져올 때 크기를 결정해줄 때 사용하는 알고리즘이다.만약에 16M 의 메모리를 프로세스가 가져온다고 하자. 이럴 때 사용할 수 있는 알고리즘은 각 각 다음과 같다. best-fit먼저 메모리 블럭들을 처음부터 끝까지 다 탐색해">
+<meta property="og:type" content="article">
+<meta property="og:title" content="first-fit, next-fit, best-fit, worst-fit">
+<meta property="og:url" content="http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/index.html">
+<meta property="og:site_name" content="p0her">
+<meta property="og:description" content="first-fit, next-fit, best-fit, worst-fit 알고리즘은 운영체제 이론에서 프로세스가 메모리를 블럭단위로 가져올 때 크기를 결정해줄 때 사용하는 알고리즘이다.만약에 16M 의 메모리를 프로세스가 가져온다고 하자. 이럴 때 사용할 수 있는 알고리즘은 각 각 다음과 같다. best-fit먼저 메모리 블럭들을 처음부터 끝까지 다 탐색해">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2023-05-05T09:12:31.000Z">
+<meta property="article:modified_time" content="2023-05-06T17:48:32.025Z">
+<meta property="article:author" content="p0her">
+<meta property="article:tag" content="pwn">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/mikoto.jpg">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/mikoto.jpg" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/mikoto.jpg">
+        
+      
+    
+    <!-- title -->
+    <title>first-fit, next-fit, best-fit, worst-fit</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-86660611-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-86660611-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/05/03/pwnable-tw-realloc/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&text=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&is_video=false&description=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=first-fit, next-fit, best-fit, worst-fit&body=Check out this article: http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&name=first-fit, next-fit, best-fit, worst-fit&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&t=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#best-fit"><span class="toc-number">1.</span> <span class="toc-text">best-fit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#first-fit"><span class="toc-number">2.</span> <span class="toc-text">first-fit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#worst-fit"><span class="toc-number">3.</span> <span class="toc-text">worst-fit</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        first-fit, next-fit, best-fit, worst-fit
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">p0her</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-05-05T09:12:31.000Z" class="dt-published" itemprop="datePublished">2023-05-05</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/analyse/">analyse</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/pwn/" rel="tag">pwn</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>first-fit, next-fit, best-fit, worst-fit 알고리즘은 운영체제 이론에서 프로세스가 메모리를 블럭단위로 가져올 때 크기를 결정해줄 때 사용하는 알고리즘이다.<br>만약에 <code>16M</code> 의 메모리를 프로세스가 가져온다고 하자. 이럴 때 사용할 수 있는 알고리즘은 각 각 다음과 같다.</p>
+<h2 id="best-fit"><a href="#best-fit" class="headerlink" title="best-fit"></a>best-fit</h2><p>먼저 메모리 블럭들을 처음부터 끝까지 다 탐색해서 요청한 메모리 크기의 가장 가까운(근접한) 크기의 메모리 블럭을 준다.</p>
+<h2 id="first-fit"><a href="#first-fit" class="headerlink" title="first-fit"></a>first-fit</h2><p>메모리 블럭들을 처음부터 탐색한다는건 best-fit 과 동일한데, 탐색하는 중에 요청한 메모리 블럭이 들어갈만한 사이즈면 바로 해당 사이즈의 블럭을 준다.</p>
+<h2 id="worst-fit"><a href="#worst-fit" class="headerlink" title="worst-fit"></a>worst-fit</h2><p>가장 큰 메모리 블럭에 넣는다는 것이 차이점이다. 이 아이디어의 근거는 가장 큰 메모리 블럭에 들어가면, 다른 프로세스가 그 메모리 블럭을 쓸 확률이 높아진다는 것에 의의를 둔다.</p>
+<p>아무튼 이걸 설명하는 이유는 malloc 이 first-fit 알고리즘을 사용한다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;This file doesn&#x27;t demonstrate an attack, but shows the nature of glibc&#x27;s allocator.\n&quot;</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;glibc uses a first-fit algorithm to select a free chunk.\n&quot;</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;If a chunk is free and large enough, malloc will select this chunk.\n&quot;</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;This can be exploited in a use-after-free situation.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Allocating 2 buffers. They can be large, don&#x27;t have to be fastbin.\n&quot;</span>);</span><br><span class="line">	<span class="type">char</span>* a = <span class="built_in">malloc</span>(<span class="number">0x512</span>);</span><br><span class="line">	<span class="type">char</span>* b = <span class="built_in">malloc</span>(<span class="number">0x256</span>);</span><br><span class="line">	<span class="type">char</span>* c;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;1st malloc(0x512): %p\n&quot;</span>, a);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;2nd malloc(0x256): %p\n&quot;</span>, b);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;we could continue mallocing here...\n&quot;</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;now let&#x27;s put a string at a that we can read later \&quot;this is A!\&quot;\n&quot;</span>);</span><br><span class="line">	<span class="built_in">strcpy</span>(a, <span class="string">&quot;this is A!&quot;</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;first allocation %p points to %s\n&quot;</span>, a, a);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Freeing the first one...\n&quot;</span>);</span><br><span class="line">	<span class="built_in">free</span>(a);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;We don&#x27;t need to free anything again. As long as we allocate smaller than 0x512, it will end up at %p\n&quot;</span>, a);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;So, let&#x27;s allocate 0x500 bytes\n&quot;</span>);</span><br><span class="line">	c = <span class="built_in">malloc</span>(<span class="number">0x500</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;3rd malloc(0x500): %p\n&quot;</span>, c);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;And put a different string here, \&quot;this is C!\&quot;\n&quot;</span>);</span><br><span class="line">	<span class="built_in">strcpy</span>(c, <span class="string">&quot;this is C!&quot;</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;3rd allocation %p points to %s\n&quot;</span>, c, c);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;first allocation %p points to %s\n&quot;</span>, a, a);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;If we reuse the first allocation, it now holds the data from the third allocation.\n&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>first-fit 을 가장 직관적으로 보여준다.<br>malloc을 두 번 할당할 때 까지의 모습이다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">This file doesn&#x27;t demonstrate an attack, but shows the nature of glibc&#x27;s allocator.</span><br><span class="line">glibc uses a first-fit algorithm to select a free chunk.</span><br><span class="line">If a chunk is free and large enough, malloc will select this chunk.</span><br><span class="line">This can be exploited in a use-after-free situation.</span><br><span class="line">Allocating 2 buffers. They can be large, don&#x27;t have to be fastbin.</span><br><span class="line">1st malloc(0x512): 0x15d92a0</span><br><span class="line">2nd malloc(0x256): 0x15d97c0</span><br></pre></td></tr></table></figure>
+
+<p>각 각 주소를 가르키고 있고, 이제 이 <code>a</code> 를 free 해주면 각 사이즈에 맞는 bin에 들어갈 것이다. 그 후 같은 bin size의 메모리를 malloc을 통해 할당하면, first-fit 알고리즘에 의해 bin에서 다시 메모리를 찾아서 똑같은 주소에 할당 받는다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">we could continue mallocing here...</span><br><span class="line">now let&#x27;s put a string at a that we can read later &quot;this is A!&quot;</span><br><span class="line">first allocation 0x15d92a0 points to this is A!</span><br><span class="line">Freeing the first one...</span><br><span class="line">We don&#x27;t need to free anything again. As long as we allocate smaller than 0x512, it will end up at 0x15d92a0</span><br><span class="line">So, let&#x27;s allocate 0x500 bytes</span><br><span class="line">3rd malloc(0x500): 0x15d92a0</span><br><span class="line">And put a different string here, &quot;this is C!&quot;</span><br><span class="line">3rd allocation 0x15d92a0 points to this is C!</span><br><span class="line">first allocation 0x15d92a0 points to this is C!</span><br><span class="line">If we reuse the first allocation, it now holds the data from the third allocation.</span><br></pre></td></tr></table></figure>
+
+<p>3rd malloc을 보면 a의 주소를 가지고 있는것을 볼 수 있고, 실제로 주소를 출력해보면 <code>a</code>와 <code>c</code>의 주소가 똑같은걸 볼 수 있다.</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#best-fit"><span class="toc-number">1.</span> <span class="toc-text">best-fit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#first-fit"><span class="toc-number">2.</span> <span class="toc-text">first-fit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#worst-fit"><span class="toc-number">3.</span> <span class="toc-text">worst-fit</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&text=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&is_video=false&description=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=first-fit, next-fit, best-fit, worst-fit&body=Check out this article: http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&title=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&name=first-fit, next-fit, best-fit, worst-fit&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/05/first-fit-next-fit-best-fit-worst-fit/&t=first-fit, next-fit, best-fit, worst-fit"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    p0her
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
